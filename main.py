@@ -51,23 +51,19 @@ class Deck:
         return self.deck
 
     def deal(self):
-        if not len(self.deck):
+        if not self.deck:
             raise IndexError("Deck is empty.")
         dealt_card = self.deck.pop()
         self.spent_cards.append(dealt_card)
         return dealt_card
 
     def shuffle(self):
-        self.deck = self.deck + self.spent_cards
+        self.deck.extend(self.spent_cards)
         random.shuffle(self.deck)
 
     def print(self):
         print("Remaining: ", self.deck)
         print("Spent: ", self.spent_cards)
-
-
-# players = [Player(name) for name in ['Mom', 'Erin', 'Drew', 'Brandi']]
-players = [Player(name) for name in ['Mom', 'Drew']]
 
 
 def war():
