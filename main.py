@@ -1,5 +1,7 @@
 import random
 import time
+import argparse
+import sys
 
 
 class Player:
@@ -49,6 +51,8 @@ class Deck:
         return self.deck
 
     def deal(self):
+        if not len(self.deck):
+            raise IndexError("Deck is empty.")
         dealt_card = self.deck.pop()
         self.spent_cards.append(dealt_card)
         return dealt_card
@@ -76,7 +80,10 @@ def war():
     deck.shuffle()
     while deck.deck:
         for player in players:
-            player.hand.append(deck.deal())
+            if deck.deck:
+                player.hand.append(deck.deal())
+            else:
+                break
     hands = [player.hand for player in players]
     rounds = min([len(hand) for hand in hands])
     for player in players:
@@ -92,4 +99,25 @@ def war():
         print(player, player.points)
 
 
-war()
+def main(args):
+    parser = argparse.ArgumentParser(
+        description="""
+                Play some games!
+                I just need to know which one you want to play:
+                """
+    )
+    parser.add_argument('--war', '-w', action='store_true',
+                        help='Play a game of war!')
+
+    if not args:
+        parser.print_usage()
+        sys.exit(1)
+
+    ns = parser.parse_args(args)
+
+    if ns.war:
+        war()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
