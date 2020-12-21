@@ -12,6 +12,9 @@ class Player:
     def __repr__(self):
         return self.name
 
+    def deal(self, card):
+        self.hand.append(card)
+
 
 class Card:
     def __init__(self, suit, name, value):
@@ -99,22 +102,28 @@ def war():
 
 
 def euchre():
-    team1 = []
-    team2 = []
-    players = [team1, team2]
+    team1 = {"score": 0, "players": []}
+    team2 = {"score": 0, "players": []}
     for i in range(2):
         for j in range(2):
             player = Player(input(f"Team {i + 1}, Player {j + 1} name: "))
             if i == 0:
-                team1.append(player)
+                team1["players"].append(player)
             else:
-                team2.append(player)
+                team2["players"].append(player)
+    players = team1["players"] + team2["players"]
     print('Here we go!!')
     print(f"Team 1: {team1}")
     print(f"Team 2: {team2}")
+    print(f"Players: {players}")
     deck = Deck()
     deck.deck = [card for card in deck.deck if card.value >= 9]
-    print(f"Here is the deck: {deck}")
+    deck.shuffle()
+    for _ in range(5):
+        for player in players:
+            player.deal(deck.deal())
+    print([(player.name, player.hand) for player in players])
+    print(f"Turn up: {deck.deck[0]}")
 
 
 def main(args):
