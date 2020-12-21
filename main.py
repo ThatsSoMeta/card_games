@@ -50,6 +50,9 @@ class Deck:
     def __repr__(self):
         return self.deck
 
+    def __str__(self):
+        return str(self.deck)
+
     def deal(self):
         if not self.deck:
             raise IndexError("Deck is empty.")
@@ -95,6 +98,25 @@ def war():
         print(player, player.points)
 
 
+def euchre():
+    team1 = []
+    team2 = []
+    players = [team1, team2]
+    for i in range(2):
+        for j in range(2):
+            player = Player(input(f"Team {i + 1}, Player {j + 1} name: "))
+            if i == 0:
+                team1.append(player)
+            else:
+                team2.append(player)
+    print('Here we go!!')
+    print(f"Team 1: {team1}")
+    print(f"Team 2: {team2}")
+    deck = Deck()
+    deck.deck = [card for card in deck.deck if card.value >= 9]
+    print(f"Here is the deck: {deck}")
+
+
 def main(args):
     parser = argparse.ArgumentParser(
         description="""
@@ -104,6 +126,8 @@ def main(args):
     )
     parser.add_argument('--war', '-w', action='store_true',
                         help='Play a game of war!')
+    parser.add_argument('--euchre', '-e', action='store_true',
+                        help='Play a game of euchre!')
 
     if not args:
         parser.print_usage()
@@ -113,6 +137,8 @@ def main(args):
 
     if ns.war:
         war()
+    if ns.euchre:
+        euchre()
 
 
 if __name__ == "__main__":
