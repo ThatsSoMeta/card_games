@@ -97,7 +97,9 @@ def select_trump(players, dealer, current_player, deck):
                     if option['suit'] == turn_up.suit:
                         trump = possible_trump.pop(possible_trump.index(option))
                 dealer.deal(turn_up)
-                dealer.discard(min(dealer.hand, key=lambda x: x.value))
+                discard(dealer, trump)
+                # dealer.discard(min(dealer.hand, key=lambda x: x.value))
+                print(f"Press Enter when {current_player} has the computer...\n")
                 print(f"Trump is {trump['suit']}.")
             else:
                 print(f"{current_player} ends turn. {next_player(current_player, players)} is next.")
@@ -149,8 +151,37 @@ def select_trump(players, dealer, current_player, deck):
     return trump
 
 
+def discard(player, trump):
+    hand = player.hand
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print(f"{trump['suit']} is trump.")
+    input(f"Press Enter when {player} has the computer...\n")
+    print("Your hand:")
+    discard = None
+    while not discard:
+        for i, card in enumerate(hand):
+            print(f"{i} - {card.name} of {card.suit}")
+        discard = input(f"{player}, please select a card to discard?\n")
+        while not discard.isdigit() or int(discard) not in range(len(hand)):
+            discard = input('Please pick a number from the given list...\n')
+        discard = hand[int(discard)]
+    return player.discard(discard)
+    # print(f"Table: {trick}")
+    # for i, card in enumerate(hand):
+    #     print(f"{i} - {card.name} of {card.suit}")
+    # play = input(f'{player}, which card would you like to play? ')
+    # while int(play) not in range(len(hand)) or not play.isdigit():
+    #     play = input('Please pick a number from the given list...')
+    # play = int(play)
+    # if hand[play].suit != lead_suit and lead_suit in suits_in_hand:
+    #     print(f"You must follow suit by playing {lead_suit}...")
+    #     play = None
+    #     print(f"{trump['suit'].title()} is trump.")
+
+    discard = input('Please select a card to discard.\n')
+
 def euchre_play(player, trick, dealer, players, trump):
-    input(f"Press Enter when {player} has the computer...")
+    input(f"Press Enter when {player} has the computer...\n")
     hand = player.hand
     suits_in_hand = [card.suit for card in player.hand]
     hand.sort(key=lambda x: x.value, reverse=True)
