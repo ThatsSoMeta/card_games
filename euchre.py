@@ -60,7 +60,7 @@ def euchre():
         os.system('cls' if os.name == 'nt' else 'clear')
         trick = []
         for player in players:
-            trick.append(euchre_play(current_player, trick, players, trump))
+            trick.append(euchre_play(current_player, trick, dealer, players, trump))
             print(f"{current_player}'s turn ends.")
             current_player = next_player(current_player, players)
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -88,7 +88,7 @@ def select_trump(players, dealer, current_player, deck):
     for _ in range(4):
         if not trump:
             print(f"Players: {players}")
-            input(f"Press any key when {current_player.name} has the computer...")
+            input(f"Press Enter when {current_player.name} has the computer...")
             print()
             print(f"{current_player.name}'s hand: {current_player.hand}")
             print(f"""\tWould you like {dealer} to pick up the {turn_up.name} of {turn_up.suit}?""")
@@ -107,19 +107,29 @@ def select_trump(players, dealer, current_player, deck):
     for option in possible_trump:
         if option['suit'] == turn_up.suit:
             possible_trump.pop(possible_trump.index(option))
-    options = [option['suit'] for option in possible_trump]
+    options = [option['suit'] for option in possible_trump] + ['pass']
     for _ in range(4):
         os.system('cls' if os.name == 'nt' else 'clear')
         if not trump:
-            input(f'Press any key when {current_player.name} has the computer...')
+            print(f"Players: {players}")
+            print(f"Dealer: {dealer}")
+            input(f'Press Enter when {current_player.name} has the computer...\n')
             print()
             print(f"{current_player.name}'s hand: {current_player.hand}")
-            print(f"{current_player.name}, what suit would you like to call (if any)?")
-            request = input(options)
-            for option in possible_trump:
-                if option['suit'] == request.lower():
-                    trump = possible_trump.pop(possible_trump.index(option))
-                    print(f"Trump is {trump['suit']}.")
+            request = None
+            if not request:
+                if current_player == dealer:
+                    options.pop(options.index(options[-1]))
+                for i, option in enumerate(options):
+                    print(f"{i} - {option.title()}")
+                request = input(f"{current_player.name}, what suit would you like to call?\n")
+                while not request.isdigit() or int(request) not in range(len(options)):
+                    request = input(f"Please pick a number from the given list...\n")
+                if options[int(request)] != 'pass':
+                    for suit in possible_trump:
+                        if suit['suit'] == options[int(request)]:
+                            trump = suit
+                            print(f"Trump: {trump}")
         current_player = next_player(current_player, players)
     while not trump:
         print(f"{dealer} must choose trump!")
@@ -139,8 +149,8 @@ def select_trump(players, dealer, current_player, deck):
     return trump
 
 
-def euchre_play(player, trick, players, trump):
-    input(f"Press any key when {player} has the computer...")
+def euchre_play(player, trick, dealer, players, trump):
+    input(f"Press Enter when {player} has the computer...")
     hand = player.hand
     suits_in_hand = [card.suit for card in player.hand]
     hand.sort(key=lambda x: x.value, reverse=True)
@@ -149,6 +159,7 @@ def euchre_play(player, trick, players, trump):
     print(f"It is {player}'s turn...")
     print(f"Trump is {trump['suit']}")
     print(f"On the table: {trick}")
+    print("Your hand:")
     if not trick:
         for i, card in enumerate(hand):
             print(f"{i} - {card.name} of {card.suit}")
@@ -179,11 +190,8 @@ def euchre_play(player, trick, players, trump):
 
 
 def check_winner(teams):
-    scores = [team['score'] for team in teams]
-    if max(scores) - min(scores) < 2:
-        return False
     for team in teams:
-        if team['score'] == max(scores):
+        if team['score'] == 10:
             print(f"{team['players'][0]} and {team['players'][1]} win!!")
             return team
 
