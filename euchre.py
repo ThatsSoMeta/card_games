@@ -1,11 +1,14 @@
-from main import Player, Deck
+from main import Player, Team, Deck
 import random
 import os
+import time
 
 # Drew = Player('Drew')
 # Mom = Player('Mom')
 # Erin = Player('Erin')
 # Brandi = Player('Brandi')
+
+team_schema = {"score": 0, "players": [], "tricks": 0}
 
 
 def next_player(current_player, players):
@@ -16,64 +19,135 @@ def next_player(current_player, players):
         return players[0]
 
 
-def euchre():
+def automate_team_creation():
+    # code below assigns teams via terminal prompt
+    # this will be simplified in the actual app
+    """Creates teams"""
+    # code below would be useful for other games
+    # how_many_teams = input("How many teams do you need?\n")
+    # while not how_many_teams.isdigit():
+    #     how_many_teams = input("Integers only, please.... ")
+    # how_many_players = input("How many players per team?\n")
+    # while not how_many_players.isdigit():
+    #     how_many_players = input("Integers only please\n")
+    how_many_teams = 2
+    how_many_players = 2
+    teams = []
+    for i in range(int(how_many_teams)):
+        name = input(f"Team {i + 1} name:\n")
+        while not name:
+            print("Come on. We need to call you something.")
+            name = input(f"Team {i + 1} name:\n")
+        team = Team(name)
+        for j in range(int(how_many_players)):
+            name = input(f"{team.name} - Player {j + 1} name:\n")
+            while not name:
+                print("We need a way to address you...")
+                name = input(f"{team.name} - Player {j + 1} name:\n")
+            player = Player(name)
+            team.players.append(player)
+        teams.append(team)
+    return teams
+
+
+def euchre(teams):
     """
     Play a game of euchre! (kinda)
     NOTE: There will not be this many prints in the real code.
     """
     os.system('cls' if os.name == 'nt' else 'clear')
-    deck = Deck()
-    deck.deck = [card for card in deck.deck if card.value >= 9]  # only use 9+
-    deck.shuffle()
+    team1, team2 = teams
     players = []
-    team1 = {"score": 0, "players": []}
-    team2 = {"score": 0, "players": []}
-    # code below assigns teams via terminal prompt
-    # this will be simplified in the actual app
     for i in range(2):
-        for j in range(2):
-            player = Player(input(f"Team {i + 1}, Player {j + 1} name: "))
-            if i == 0:
-                team1["players"].append(player)
-            else:
-                team2["players"].append(player)
-    for i in range(2):
-        players.append(team1["players"][i])
-        players.append(team2["players"][i])
-    # alone = False
-    # game_active = True
+        players.append(team1.players[i])
+        players.append(team2.players[i])
+    game_active = True
     # Gameplay logic starts below. Will likely split up into multiple functions
     # LET THE GAMES BEGIN!
     dealer = random.choice(players)
-    current_player = dealer
-    print('Here we go!!')
-    print(f"Players: {[player.name for player in players]}")
-    print(f"Dealer: {dealer}")
-    for _ in range(5):
-        for player in players:
-            player.deal(deck.deal())
-    trump = select_trump(players, dealer, current_player, deck)
-    current_player = next_player(dealer, players)
-    # while game_active:
-    print(f"{dealer} is dealer. Game will begin with {current_player}.")
-    for _ in range(5):
-        os.system('cls' if os.name == 'nt' else 'clear')
-        trick = []
-        for player in players:
-            trick.append(euchre_play(current_player, trick, dealer, players, trump))
-            print(f"{current_player}'s turn ends.")
-            current_player = next_player(current_player, players)
-            os.system('cls' if os.name == 'nt' else 'clear')
-        trick_values = [hand[1].value for hand in trick]
-        for hand in trick:
-            if hand[1].value == max(trick_values):
-                winner = hand
-        print(f"Winning card: {winner}")
-        winning_team = team1 if winner[0] in team1 else team2
-        print(f"{winning_team['players'][0]} and {winning_team['players'][1]} take the trick.")
+    while game_active:
+        deck = Deck()
+        deck.deck = [card for card in deck.deck if card.value >= 9]  # only use 9+
+        print('Shuffling deck...')
+        deck.shuffle()
+        time.sleep(5)
+        dealer = next_player(dealer, players)
+        current_player = dealer
+        print('Here we go!!')
+        print('Scores:')
+        for team in teams:
+            print(f"\t{team.name}: {team.score}")
+        print(f"Players: {[player.name for player in players]}")
+        print(f"Dealer: {dealer}")
+        for _ in range(5):
+            for player in players:
+                player.deal(deck.deal())
+        trump = select_trump(players, dealer, current_player, deck)
+        current_player = next_player(dealer, players)
+        print(f"{dealer} is dealer. Game will begin with {current_player}.")
+        # alone = False
+        for _ in range(5):
+            trick = []
+            for _ in range(4):
+                os.system('cls' if os.name == 'nt' else 'clear')
+                trick.append(euchre_play(current_player, trick, dealer, players, trump))
+                print(f"{current_player}'s turn ends.")
+                current_player = next_player(current_player, players)
+                os.system('cls' if os.name == 'nt' else 'clear')
+            trick_values = [card[1].value for card in trick]
+            for card in trick:
+                if card[1].value == max(trick_values):
+                    winner = card
+            print(f"Winning card: {winner}")
+            winning_team = team1 if winner[0] in team1.players else team2
+            winning_team.tricks += 1
+            print(f"{winning_team.players[0]} and {winning_team.players[1]} take the trick.")
+            print(f"Tricks:")
+            for team in teams:
+                print(f"\t{team.name}: {team.tricks}")
+            time.sleep(5)
+        print("Scores:")
+        for team in teams:
+            if team.tricks > 2:
+                team.score += 1
+            print(f"\t{team.players[0]} and {team.players[1]} have {team.score} points")
+        time.sleep(5)
+        check_winner([team1, team2])
+        for team in teams:
+            if team.score == 10:
+                print(f"{team.players[0]} and {team.players[1]} win!!")
+                game_active = False
+                time.sleep(10)
+                return team
+        print('No winners yet...')
+
+
+
+def update_scores(teams):
+    """Updates scoreboard"""
+    print("Scores:")
+    for team in teams:
+        if team.tricks > 2:
+            team.score += 1
+        print(f"\t{team.players[0]} and {team.players[1]} have {team.score} points")
+    time.sleep(5)
+
+
+def check_winner(teams):
+    """Updates scores and determines if game is over"""
+    for team in teams:
+        if team.score == 10:
+            print(f"{team.players[0]} and {team.players[1]} win!!")
+            game_active = False
+            time.sleep(10)
+            return team
+    return None
 
 
 def select_trump(players, dealer, current_player, deck):
+    """
+    Cycle through players to select trump suit
+    """
     possible_trump = [
         {'suit': 'hearts', 'color': 'red'},
         {'suit': 'diamonds', 'color': 'red'},
@@ -91,14 +165,13 @@ def select_trump(players, dealer, current_player, deck):
             input(f"Press Enter when {current_player.name} has the computer...")
             print()
             print(f"{current_player.name}'s hand: {current_player.hand}")
-            print(f"""\tWould you like {dealer} to pick up the {turn_up.name} of {turn_up.suit}?""")
-            if input('Y or N? ').lower() in ['y', 'yes']:
+            print(f"\tWould you like {dealer} to pick up the {turn_up.name} of {turn_up.suit}?")
+            if input('\tY or N? ').lower() in ['y', 'yes']:
                 for option in possible_trump:
                     if option['suit'] == turn_up.suit:
                         trump = possible_trump.pop(possible_trump.index(option))
                 dealer.deal(turn_up)
                 discard(dealer, trump)
-                # dealer.discard(min(dealer.hand, key=lambda x: x.value))
                 print(f"Press Enter when {current_player} has the computer...\n")
                 print(f"Trump is {trump['suit']}.")
             else:
@@ -116,7 +189,6 @@ def select_trump(players, dealer, current_player, deck):
             print(f"Players: {players}")
             print(f"Dealer: {dealer}")
             input(f'Press Enter when {current_player.name} has the computer...\n')
-            print()
             print(f"{current_player.name}'s hand: {current_player.hand}")
             request = None
             if not request:
@@ -145,6 +217,7 @@ def select_trump(players, dealer, current_player, deck):
             if card.suit == trump['suit']:
                 card.value += 25
             else:
+                trump['left_bauer'] = card
                 card.value += 20
         elif card.suit == trump['suit']:
             card.value += 13
@@ -152,48 +225,49 @@ def select_trump(players, dealer, current_player, deck):
 
 
 def discard(player, trump):
-    hand = player.hand
+    """
+    Allow player to choose card to discard.
+    Trump passed in only to help you make a good decision.
+    """
+    hand = sorted(player.hand, key=lambda card: card.value)
+    hand.sort(key=lambda card: card.suit)
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"{trump['suit']} is trump.")
     input(f"Press Enter when {player} has the computer...\n")
-    print("Your hand:")
+    print(f"{trump['suit'].title()} is trump.")
+    print("\nYour hand:\n")
     discard = None
     while not discard:
         for i, card in enumerate(hand):
-            print(f"{i} - {card.name} of {card.suit}")
-        discard = input(f"{player}, please select a card to discard?\n")
+            print(f"\t{i} - {card.name} of {card.suit}")
+        print()
+        discard = input(f"{player}, please select a card to discard...\n")
         while not discard.isdigit() or int(discard) not in range(len(hand)):
             discard = input('Please pick a number from the given list...\n')
         discard = hand[int(discard)]
     return player.discard(discard)
-    # print(f"Table: {trick}")
-    # for i, card in enumerate(hand):
-    #     print(f"{i} - {card.name} of {card.suit}")
-    # play = input(f'{player}, which card would you like to play? ')
-    # while int(play) not in range(len(hand)) or not play.isdigit():
-    #     play = input('Please pick a number from the given list...')
-    # play = int(play)
-    # if hand[play].suit != lead_suit and lead_suit in suits_in_hand:
-    #     print(f"You must follow suit by playing {lead_suit}...")
-    #     play = None
-    #     print(f"{trump['suit'].title()} is trump.")
 
-    discard = input('Please select a card to discard.\n')
 
 def euchre_play(player, trick, dealer, players, trump):
+    """
+    Looks at board and simulates game play
+    """
     input(f"Press Enter when {player} has the computer...\n")
-    hand = player.hand
+    trump_suit = trump['suit']
+    hand = sorted(player.hand, key=lambda card: card.suit)
     suits_in_hand = [card.suit for card in player.hand]
+    if trump['left_bauer'] in hand:
+        suits_in_hand.append(trump['suit'])
+        suits_in_hand.pop(suits_in_hand.index(trump['left_bauer'].suit))
     hand.sort(key=lambda x: x.value, reverse=True)
-    print(f"Players: {players}")
-    print(f"Dealer: {dealer}")
     print(f"It is {player}'s turn...")
+    print(f"Players: {players}\nDealer: {dealer}")
     print(f"Trump is {trump['suit']}")
     print(f"On the table: {trick}")
-    print("Your hand:")
+    print("\nYour hand:\n")
+    for i, card in enumerate(hand):
+        print(f"\t{i} - {card}")
+    print()
     if not trick:
-        for i, card in enumerate(hand):
-            print(f"{i} - {card.name} of {card.suit}")
         play = input('Which card would you like to play? ')
         while not play.isdigit() or int(play) not in range(len(hand)):
             play = input('Please pick a number from the given list... ')
@@ -202,30 +276,31 @@ def euchre_play(player, trick, dealer, players, trump):
         return (player, hand.pop(play))
     else:
         lead_suit = trick[0][1].suit
+        # playable_cards = []
+        # for card in hand:
+        #     if card.suit == lead_suit:
+        #         playable_cards.append(card)
         print(f"{lead_suit.title()} was led.")
         play = None
-        while not play:
-            print(f"Table: {trick}")
-            for i, card in enumerate(hand):
-                print(f"{i} - {card.name} of {card.suit}")
-            play = input(f'{player}, which card would you like to play? ')
+        while play not in range(len(hand)):
+            play = input(f'{player}, which card would you like to play?\n')
             while int(play) not in range(len(hand)) or not play.isdigit():
                 play = input('Please pick a number from the given list...')
             play = int(play)
-            if hand[play].suit != lead_suit and lead_suit in suits_in_hand:
-                print(f"You must follow suit by playing {lead_suit}...")
-                play = None
-                print(f"{trump['suit'].title()} is trump.")
+            if lead_suit == trump['suit']:
+                if lead_suit in suits_in_hand or trump['left_bauer'] in hand:
+                    if hand[play].suit != lead_suit and hand[play] != trump['left_bauer']:
+                        print(f"You must follow suit by playing {lead_suit} or {trump['left_bauer']}...")
+                        play = None
+                        print(f"{trump['suit'].title()} is trump.")
+            else:
+                if hand[play] == trump['left_bauer']:
+                    print(f'That is the left bauer. It is considered {trump_suit}.')
+                    play = None
         print(f"{player} plays {hand[play].name} of {hand[play].suit}")
         return (player, hand.pop(play))
 
 
-def check_winner(teams):
-    for team in teams:
-        if team['score'] == 10:
-            print(f"{team['players'][0]} and {team['players'][1]} win!!")
-            return team
-
-
 if __name__ == "__main__":
-    euchre()
+    teams = automate_team_creation()
+    euchre(teams)

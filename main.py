@@ -6,10 +6,31 @@ import sys
 # from euchre import euchre
 
 
+class Team:
+    def __init__(self, name):
+        self.name = name
+        self.players = []
+        self.score = 0
+        self.tricks = 0
+
+    def __repr__(self):
+        return {
+            "Team Name": self.name,
+            "Players": self.players,
+            "Score": self.score
+            }
+
+    def add_player(self):
+        name = input("Player name: ")
+        while not name:
+            name = input("Come on... we have to call you something...")
+        self.players.append(Player(name))
+
+
 class Player:
     def __init__(self, name):
         self.name = name
-        self.hand = []
+        self.hand = sorted([], key=lambda card: card.suit)
 
     def __repr__(self):
         return self.name
@@ -29,7 +50,7 @@ class Card:
         self.color = color
 
     def __repr__(self):
-        return str(f'({self.name}, {self.suit}, {self.value})')
+        return f"{self.name} of {self.suit.title()}"
 
 
 class Deck:
