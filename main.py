@@ -12,6 +12,8 @@ class Team:
         self.players = []
         self.score = 0
         self.tricks = 0
+        for player in self.players:
+            player.team = self
 
     def __repr__(self):
         return {
@@ -20,11 +22,8 @@ class Team:
             "Score": self.score
             }
 
-    def add_player(self):
-        name = input("Player name: ")
-        while not name:
-            name = input("Come on... we have to call you something...")
-        self.players.append(Player(name))
+    def add_player(self, player):
+        self.players.append(player)
 
 
 class Player:
@@ -39,7 +38,7 @@ class Player:
         self.hand.append(card)
 
     def discard(self, card):
-        self.hand.pop(self.hand.index(card))
+        return self.hand.pop(self.hand.index(card))
 
 
 class Card:
