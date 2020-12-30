@@ -1,7 +1,7 @@
-from main import Player, Team, Deck
+from schemas import Player, Team, Deck
 import random
 import os
-import time
+# import time
 
 team1 = Team('Team One')
 team2 = Team('Team Two')
@@ -94,7 +94,7 @@ def euchre(teams):
         deck.deck = [card for card in deck.deck if card.value >= 9]  # only use 9+
         deck.shuffle()
         print('Shuffling deck...\n')
-        time.sleep(3)
+        # time.sleep(3)
         os.system('cls' if os.name == 'nt' else 'clear')
         current_player = dealer
         for _ in range(5):
@@ -120,12 +120,12 @@ def euchre(teams):
                     trick.append(euchre_play(current_player, trick, dealer, teams, trump))
                 else:
                     print(f"Skipping {current_player}'s turn because their partner is going alone.")
-                    time.sleep(2)
+                    # time.sleep(2)
                 current_player = next_player(current_player, players)
                 os.system('cls' if os.name == 'nt' else 'clear')
-            if trick == []:
-                print("For some reason the trick is empty...")
-                return
+            # if trick == []:
+            #     print("For some reason the trick is empty...")
+            #     return
             for card in trick:
                 if card[1].suit != trick[0][1].suit and card[1].suit != trump['suit']:
                     if card[1] is not trump['left_bauer']:
@@ -162,7 +162,7 @@ def euchre(teams):
             if team.score == 10:
                 print(f"{team} win!!")
                 game_active = False
-                time.sleep(10)
+                input(f"Congratulations {team}! Press Enter to continue.")
                 return team
         print('No winners yet...')
         input("Press Enter to continue.")
@@ -170,8 +170,9 @@ def euchre(teams):
         dealer = next_player(dealer, players)
         for team in teams:
             team.tricks = 0
-            for player in team:
+            for player in team.players:
                 player.active = True
+                player.hand = []
 
 
 def select_trump(players, teams, dealer, current_player, deck):
@@ -326,13 +327,13 @@ def euchre_play(player, trick, dealer, teams, trump):
         print(f"Trump is {trump_suit}.")
         # print_game_info(player, teams, dealer, trump=trump, trick=[])
         print("It is your lead. Choose any card.")
-        play = input(f'{player}, which card would you like to play? ')
+        play = input(f'{player}, which card would you like to play?\n')
         while not play.isdigit() or int(play) not in range(len(hand)):
             play = input('Please pick a number from the given list... ')
         play = int(play)
         selected_card = player.discard(hand[play])
         print(f"{player} plays the {selected_card}.")
-        time.sleep(1)
+        # time.sleep(1)
     else:
         if trick[0][1] == trump['left_bauer']:
             lead_suit = trump_suit
@@ -352,7 +353,7 @@ def euchre_play(player, trick, dealer, teams, trump):
                 print(f"{player.name} has no {lead_suit}.")
                 print(f"{player.name} plays the {selected_card}.")
                 # input("Press Enter to continue.")
-                time.sleep(1)
+                # time.sleep(1)
             else:
                 if lead_suit != trump_suit:
                     if hand[play] is not trump['left_bauer']:
@@ -361,7 +362,7 @@ def euchre_play(player, trick, dealer, teams, trump):
                             print(f"{player.name} has {lead_suit}.")
                             print(f"{player.name} plays the {selected_card}.")
                             # input('Press Enter to continue.')
-                            time.sleep(1)
+                            # time.sleep(1)
                         else:
                             print("You must follow suit.")
                     else:
@@ -371,13 +372,13 @@ def euchre_play(player, trick, dealer, teams, trump):
                         selected_card = player.discard(hand[play])
                         print(f"{player.name} plays the {selected_card}.")
                         # input('Press Enter to continue.')
-                        time.sleep(1)
+                        # time.sleep(1)
                     elif hand[play].suit == lead_suit:
                         selected_card = player.discard(hand[play])
                         print(f"{player.name} has {lead_suit}.")
                         print(f"{player.name} plays the {selected_card}.")
                         # input('Press Enter to continue.')
-                        time.sleep(1)
+                        # time.sleep(1)
                     else:
                         print("You must follow suit.")
             play = None
