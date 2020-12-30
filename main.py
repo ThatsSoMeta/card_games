@@ -16,11 +16,10 @@ class Team:
             player.team = self
 
     def __repr__(self):
-        return {
-            "Team Name": self.name,
-            "Players": self.players,
-            "Score": self.score
-            }
+        if len(self.players) == 2:
+            return " & ".join([player.name for player in self.players])
+        else:
+            return self.name
 
     def add_player(self, player):
         self.players.append(player)
@@ -30,6 +29,7 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.hand = sorted([], key=lambda card: card.suit)
+        self.active = True
 
     def __repr__(self):
         return self.name
