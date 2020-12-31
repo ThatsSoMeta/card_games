@@ -1,5 +1,4 @@
-from schemas import *
-# import time
+from schemas import Deck, Player
 
 
 hand_values = {
@@ -17,20 +16,42 @@ hand_values = {
 
 
 def check_winner(players):
-    all_hands = [[player, assess_hand(player)] for player in players]
-    all_hands.sort(key=lambda hand: hand[1][1], reverse=True)
-    print(all_hands)
-    # for player in [drew, mom]:
-    #     print(f"{player}: {assess_hand(player)}")
-    print(f"{all_hands[0][0]} wins with a {all_hands[0][1][0]}.")
-    return all_hands[0]
+    all_hands = {player: assess_hand(player) for player in players}
+    best_hand_value = max([hand_values[play[0]] for play in all_hands.values()])
+    for hand, value in hand_values.items():
+        if value == best_hand_value:
+            best_hand = hand
+    winners = [
+        (player, hand) for player, hand in all_hands.items()
+        if hand[0] == best_hand
+    ]
+    if len(winners) == 1:
+        print(f"Winner is: {winners[0]}")
+        return winners[0]
+    else:
+        high_values = [
+            winner[1][1] for winner in winners
+        ]
+        narrowed = [
+            winner for winner in winners
+            if winner[1][1] == max(high_values)
+        ]
+        if len(narrowed) == 1:
+            print(f"Winner is: {narrowed[0]}")
+            return narrowed[0]
+        else:
+            print(f"There is a tie: {narrowed}")
+
+
+    # print(f"{all_hands[0][0]} wins with a {all_hands[0][1]}.")
+    # return all_hands[0]
 
 
 def assess_hand(player):
     values = {}
     suits = {}
     names = {}
-    possible_plays = []
+    possible_plays = {}
     for card in player.hand:
         try:
             values[card.value] += 1
@@ -45,46 +66,40 @@ def assess_hand(player):
         except KeyError:
             names[card.name] = 1
     vals = sorted([val for val in values.keys()])
-    # print(f"Values: {vals}")
-    for suit, count in suits.items():
+    for _, count in suits.items():
         if count == 5:
-            # print(f"List(range(min - max)): {list(range(min(vals), max(vals) + 1))}")
             if vals == list(range(min(vals), max(vals) + 1)):
                 if max(vals) == 14:
-                    # print(f"You have a royal flush in {suit}!!!")
-                    possible_plays.append("royal_flush")
+                    possible_plays["royal_flush"] = max(vals)
                 else:
-                    # print(f"You have a straight flush in {suit}!")
-                    possible_plays.append("straight_flush")
+                    possible_plays["straight_flush"] = max(vals)
             else:
-                # print(f"You have a flush in {suit}!")
-                possible_plays.append("flush")
-    for name, count in names.items():
+                possible_plays["flush"] = max(vals)
+    for value, count in values.items():
         if count == 4:
-            # print(f"You have four {name}s!")
-            possible_plays.append("four_of_a_kind")
+            possible_plays["four_of_a_kind"] = value
         elif count == 3:
-            # print(f"You have three {name}s!")
-            possible_plays.append("three_of_a_kind")
+            possible_plays["three_of_a_kind"] = value
         elif count == 2:
-            if "pair" in possible_plays:
-                # print("You have two pairs!")
-                possible_plays.append("two_pair")
-            else:
-                # print(f"You have a pair of {name}s!")
-                possible_plays.append("pair")
+            try:
+                possible_plays["pair"].append(value)
+            except KeyError:
+                possible_plays["pair"] = [value]
+            if len(possible_plays["pair"]) == 2:
+                possible_plays["two_pair"] = possible_plays["pair"]
     if len(vals) == 5 and vals == list(range(min(vals), max(vals) + 1)):
-        # print("You have a straight!")
-        possible_plays.append("straight")
+        possible_plays["straight"] = max(vals)
     if "pair" in possible_plays and "three_of_a_kind" in possible_plays:
-        # print("You have a full house!")
-        possible_plays.append("full_house")
-    possible_plays = [(play, hand_values[play]) for play in possible_plays]
-    # print(possible_plays)
-    # for play in possible_plays:
-    #     print(f"{play}: {hand_values[play]}")
-    best_hand = max(possible_plays, key=lambda play: play[1])
-    # print(f"{player}'s best play is {best_hand}.")
+        possible_plays["full_house"] = [
+            possible_plays["three_of_a_kind"],
+            possible_plays["pair"][0]
+        ]
+    possible_plays["high_card"] = max(card.value for card in player.hand)
+    possible_plays = [play for play in possible_plays.items()]
+    print(f"{player}: {possible_plays}")
+    best_hand = max(possible_plays, key=lambda play: hand_values[play[0]])
+    print(f"{player}'s best hand:")
+    print(f"{best_hand} with a value of {hand_values[best_hand[0]]}")
     return best_hand
 
 
@@ -109,27 +124,23 @@ print(f"Pot: ${pot}")
 print("Let's try choosing some poker hands. Let me grab a deck.\n")
 deck = Deck()
 deck = deck.deck
-print("\n\nI have made two hands. They are both empty. You need to choose 5 cards for each hand")
-drew.hand = [deck[int(val)] for val in [0, 13, 1, 14, 27]]
-mom.hand = [deck[int(val)] for val in [8, 9, 10, 11, 7]]
+# print("\n\nI have made two hands. They are both empty. You need to choose 5 cards for each hand")
+# drew.hand = [deck[int(val)] for val in [0, 13, 1, 14, 30]]
+# mom.hand = [deck[int(val)] for val in [8, 9, 2, 11, 7]]
+drew.hand = []
+mom.hand = []
 print(f"Drew:\n{drew.hand}\n\nMom:\n{mom.hand}\n")
-# for index, hand in enumerate([hand1, hand2]):
-    # while len(hand) < 5:
-    #     for i, card in enumerate(deck):
-    #         print(f"{i} - {card}", end=' ')
-    #     choice = input(f"\n\nPlease pick a card for hand {index + 1}: ")
-    #     while not choice.isdigit() or int(choice) not in range(len(deck)):
-    #         choice = input("Please pick a different card...\n")
-    #     chosen_card = deck[int(choice)]
-    #     hand.append(chosen_card)
-    #     print(f"Hand 1:\n{hand1}\n\nHand2:\n{hand2}\n")
-    #     print("\n")
-
-# time.sleep(3)
-print("Let's check how many of each suit and value are in hand1:")
-# print(f"{drew}:")
-# assess_hand(drew)
-# print(f"{mom}:")
-# assess_hand(mom)
+for player in players:
+    hand = player.hand
+    while len(hand) < 5:
+        for i, card in enumerate(deck):
+            print(f"{i} - {card}", end=' ')
+        choice = input(f"\n\nPlease pick a card for {player}'s hand: ")
+        while not choice.isdigit() or int(choice) not in range(len(deck)):
+            choice = input("Please pick a different card...\n")
+        chosen_card = deck[int(choice)]
+        hand.append(deck.pop(deck.index(chosen_card)))
+        print(f"{player}: {hand}")
+        print("\n")
 print("Let's see who wins:")
 check_winner(players)
