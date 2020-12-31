@@ -339,7 +339,6 @@ def euchre_play(player, trick, dealer, teams, trump):
             lead_suit = trump_suit
         else:
             lead_suit = trick[0][1].suit
-        # print_game_info(player, teams, dealer, trump=trump, trick=trick)
         print(f"Trump is {trump_suit}.")
         print(f"{lead_suit.title()} was led.")
         while not selected_card:

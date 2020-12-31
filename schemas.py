@@ -37,8 +37,8 @@ class Player:
         return self.hand.pop(self.hand.index(card))
 
     def bid(self, bet):
-        while not bet.isdigit() or int(bet) not in range(self.bank + 1):
-            bet = input(f"Please choose a number between 0 and {self.bank}.\n$")
+        while not bet.isdigit() or int(bet) not in range(1, self.bank + 1):
+            bet = input(f"Please choose a number between 1 and {self.bank}.\n$")
         try:
             self.bank -= int(bet)
             return int(bet)
