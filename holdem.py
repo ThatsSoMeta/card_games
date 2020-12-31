@@ -27,6 +27,8 @@ def check_winner(players):
     ]
     if len(winners) == 1:
         print(f"Winner is: {winners[0]}")
+        print(f"{winners[0][0]}'s hand:")
+        print(winners[0][0].hand)
         return winners[0]
     else:
         high_values = [
@@ -38,6 +40,8 @@ def check_winner(players):
         ]
         if len(narrowed) == 1:
             print(f"Winner is: {narrowed[0]}")
+            print(f"{narrowed[0][0]}'s hand:")
+            print(narrowed[0][0].hand)
             return narrowed[0]
         else:
             print(f"There is a tie: {narrowed}")
@@ -102,45 +106,44 @@ def assess_hand(player):
     print(f"{best_hand} with a value of {hand_values[best_hand[0]]}")
     return best_hand
 
+def play_test():
+    # player = Player(input("Player name:\n"))
+    print("Creating Players...")
+    drew = Player('Drew')
+    mom = Player('Mom')
+    players = [drew, mom]
+    for player in players:
+        print(f"Say hello to our new player {player}.")
+        print(f"{player} currently has ${player.bank}, but we are about to give them $500.")
+        player.bank += 500
+        print("Let's see if it worked!")
+        print(f"{player}'s new bank: ${player.bank}.")
+    print("Let's make a pot. We will start at $0.")
+    pot = 0
+    print(f"Pot: ${pot}")
+    # bet_attempt = input(f"How much should {player} bet?\n$")
+    # pot += player.bid(bet_attempt)
+    # print(f"Pot: ${pot}")
+    # print(f"{player}'s new bank: ${player.bank}.")
+    print("Let's try choosing some poker hands. Let me grab a deck.\n")
+    deck = Deck()
+    deck.shuffle()
+    # deck = deck.deck
+    # print("\n\nI have made two hands. They are both empty. You need to choose 5 cards for each hand")
+    # drew.hand = [deck[int(val)] for val in [0, 13, 1, 14, 30]]
+    # mom.hand = [deck[int(val)] for val in [8, 9, 2, 11, 7]]
+    # drew.hand = []
+    # mom.hand = []
+    # print(f"Drew:\n{drew.hand}\n\nMom:\n{mom.hand}\n")
+    for _ in range(5):
+        for player in players:
+            player.deal(deck.deal())
+    for player in players:
+        print(f"{player}: {player.hand}")
+    print("Let's see who wins:")
+    check_winner(players)
 
-# player = Player(input("Player name:\n"))
-print("Creating Players...")
-drew = Player('Drew')
-mom = Player('Mom')
-players = [drew, mom]
-for player in players:
-    print(f"Say hello to our new player {player}.")
-    print(f"{player} currently has ${player.bank}, but we are about to give them $500.")
-    player.bank += 500
-    print("Let's see if it worked!")
-    print(f"{player}'s new bank: ${player.bank}.")
-print("Let's make a pot. We will start at $0.")
-pot = 0
-print(f"Pot: ${pot}")
-# bet_attempt = input(f"How much should {player} bet?\n$")
-# pot += player.bid(bet_attempt)
-# print(f"Pot: ${pot}")
-# print(f"{player}'s new bank: ${player.bank}.")
-print("Let's try choosing some poker hands. Let me grab a deck.\n")
-deck = Deck()
-deck = deck.deck
-# print("\n\nI have made two hands. They are both empty. You need to choose 5 cards for each hand")
-# drew.hand = [deck[int(val)] for val in [0, 13, 1, 14, 30]]
-# mom.hand = [deck[int(val)] for val in [8, 9, 2, 11, 7]]
-drew.hand = []
-mom.hand = []
-print(f"Drew:\n{drew.hand}\n\nMom:\n{mom.hand}\n")
-for player in players:
-    hand = player.hand
-    while len(hand) < 5:
-        for i, card in enumerate(deck):
-            print(f"{i} - {card}", end=' ')
-        choice = input(f"\n\nPlease pick a card for {player}'s hand: ")
-        while not choice.isdigit() or int(choice) not in range(len(deck)):
-            choice = input("Please pick a different card...\n")
-        chosen_card = deck[int(choice)]
-        hand.append(deck.pop(deck.index(chosen_card)))
-        print(f"{player}: {hand}")
-        print("\n")
-print("Let's see who wins:")
-check_winner(players)
+
+if __name__ == "__main__":
+    # teams = automate_team_creation()
+    play_test()
