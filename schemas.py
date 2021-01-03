@@ -116,7 +116,8 @@ class Deck:
 
 def next_player(current_player, players):
     """Returns the next player in the game"""
+    if len(players) == 1:
+        return players[0]
     if current_player != players[-1]:
         return players[players.index(current_player) + 1]
-    else:
-        return players[0]
+    return players[0]

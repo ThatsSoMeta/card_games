@@ -17,7 +17,7 @@ hand_values = {
 }
 
 
-def check_winner(players, board_cards=[]):
+def check_winners(players, board_cards=[]):
     """Compares everyone's best hand and determines winner"""
     all_hands = {player: assess_hand(player) for player in players}
     # print(f"all_hands: {all_hands}")
@@ -72,8 +72,9 @@ def check_winner(players, board_cards=[]):
                     print(f"\t{card}")
         if winners[0][2][0].value > winners[1][2][0].value:
             winner = winners[0]
-            print(f"{winner[0]} wins with {winner[1][:5]}:")
-            print(winner[2] + winner[3])
+            print(f"{winner[0]} wins with {winner[1]}:")
+            winning_hand = winner[2] + winner[3]
+            print(winning_hand[:5])
             return winner
         elif winners[0][3]:
             winners.sort(key=lambda winner: winner[3][0].value)
@@ -120,7 +121,7 @@ def check_winner(players, board_cards=[]):
                 winning_hand = winner[2] + winner[3]
                 print(winning_hand[:5])
                 # print(f"Winner: {winner}")
-            print(winners)
+            print(f"Winners: {winners} (line 124)")
             return winners
 
 
@@ -212,114 +213,134 @@ def place_bets(args):
     players = args["players"]
     player = args["current_player"]
     blinds = args["blinds"]
+    pot = args["pot"]
+    board_cards = args["board_cards"]
+    play = args["play"]
     betting_active = True
     kitty = 0
     checks = []
+    folded_players = []
     minimum_bet = 0
     count = 1
     while betting_active:
         active_players = [
-            (player, f"${player.current_bet}") for player in players
-            if player.is_active
+            (active_player, f"${active_player.current_bet}")
+            for active_player in players
+            if active_player.is_active
         ]
-        minimum_bet = max([int(player[1][1:]) for player in active_players])
+        active_players_only = [
+            active_player[0] for active_player in active_players
+            if active_player[0].is_active
+        ]
+        active_bets = [
+            int(player[1][1:]) for player in active_players
+        ]
+        if len(set(active_bets)) == 1 and active_bets[0] != 0:
+            print(f"Betting is done. All players have bet ${active_bets[0]}.")
+            break
+        minimum_bet = max(active_bets)
+        bet = 0
         if player.is_active and player.bank:
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print(f"It is {player}'s turn.")
-                input(f"Press Enter when {player} has the computer.\n")
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print(f"It is {player}'s turn.")
-                print(f"Players: {players}\nActive Players: {active_players}")
-                print(f"Checked Players: {checks}\n")
-                print(f"\n{player}'s current bet: ${player.current_bet}")
-                print(f"Kitty: ${kitty}\nMinimum bet: ${minimum_bet}")
-                print(f"\n{player}'s hand:")
-                for card in player.hand:
-                    print(f"\t{card}")
-                bet = 0
-                print(f"\n{player}, you have ${player.bank}.")
-                if blinds and count == 1:
-                    print("\nYou are the small blind. You bet $5.\n")
-                    bet = 5
-                    count += 1
-                elif blinds and count == 2:
-                    print("\nYou are the big blind. You bet $10.\n")
-                    bet = 10
-                    count += 1
-                elif minimum_bet == 0:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f"It is {player}'s turn.")
+            print(f"Blinds are {blinds}. (line 233)")
+            input(f"Press Enter when {player} has the computer.\n")
+            # os.system('cls' if os.name == 'nt' else 'clear')
+            # print(f"It is {player}'s turn.")
+            print(f"Players: {players}\nActive Players: {active_players}")
+            print(f"Checked Players: {checks}\n")
+            print(f"\n{player}'s current bet: ${player.current_bet}")
+            print(f"\nPot: ${pot}\n")
+            print(f"Kitty: ${kitty}\nMinimum bet: ${minimum_bet}")
+            print(f"\n{str(play).title()}: {board_cards}")
+            print(f"\n{player}'s hand:")
+            for card in player.hand:
+                print(f"\t{card}")
+            bet = 0
+            print(f"\n{player}, you have ${player.bank}.")
+            if blinds and count == 1:
+                print("\nYou are the small blind. You bet $5.\n")
+                bet = 5
+                count += 1
+            elif blinds and count == 2:
+                print("\nYou are the big blind. You bet $10.\n")
+                bet = 10
+                count += 1
+            elif minimum_bet == 0:
+                print("Would you like to check or bet?")
+                print("\n1 - Check    2 - Bet\n")
+                choice = input("Select one: ").lower()
+                while choice == '':
                     print("Would you like to check or bet?")
-                    print("\n1 - Check    2 - Bet\n")
-                    choice = input("Select one: ").lower()
-                    while choice == '':
-                        print("Would you like to check or bet?")
-                        choice = input("Select one: ")
-                    if choice not in [2, '2', 'bet', 'b']:
-                        bet = 0
-                    else:
-                        print("How much would you like to bet?\n")
-                        bet = input("$")
-                        while not bet.isdigit() or int(bet) not in range(
-                            10, player.bank + 1
-                        ):
-                            if int(bet) > player.bank + 1:
-                                print(f"You only have ${player.bank}.")
-                                print("What would you like to bet?\n")
-                                bet = input("$")
-                            elif int(bet) < 10:
-                                print("Minimum bet is $10.")
-                                bet = input("$")
-                        bet = int(bet)
-                        print(f"You bet ${bet}.")
+                    choice = input("Select one: ")
+                if choice not in [2, '2', 'bet', 'b']:
+                    bet = 0
                 else:
-                    print("What would you like to do?")
-                    print("\n0 - Fold    1 - Call    2 - Raise\n")
-                    choice = input("Select one: ").lower()
-                    if choice in [0, '0', 'fold', 'f']:
-                        player.is_active = False
-                        bet = 0
-                        active_bets = [
-                            player[1] for player in active_players
-                            if player[0].is_active
-                        ]
-                        betting_active = len(set(active_bets)) != 1
-                        print(f"{player} folds.")
-                    elif choice not in [2, '2', 'raise', 'r']:
-                        if player.current_bet != 5:
-                            bet = min([player.bank, minimum_bet])
-                            print("Current bet is not 5 (line 283)")
-                            print(f"{player} bet: ${bet} (line 284)")
-                        else:
-                            bet = min([player.bank, minimum_bet])
-                            print("Current bet is 5 (line 287")
-                            print(f"{player} bet: ${bet} (line 288)")
-                        print(f"{player} calls ${bet}. (line 289)")
-                    else:
-                        print("How much would you like to raise? (line 291)")
-                        bet = input("$")
-                        while not bet.isdigit() or int(bet) not in range(minimum_bet, player.bank + 1):
-                            print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet * 2}.")
+                    print("How much would you like to bet?\n")
+                    bet = input("$")
+                    while not bet.isdigit() or int(bet) not in range(
+                        10, player.bank + 1
+                    ):
+                        if int(bet) > player.bank + 1:
+                            print(f"You only have ${player.bank}.")
+                            print("What would you like to bet?\n")
                             bet = input("$")
-                        # if blinds
-                        bet = int(bet) + minimum_bet
-                        print(f"Bet after raise: ${bet} (line 298)")
-                        if bet not in range(minimum_bet, player.bank + 1):
-                            if minimum_bet + bet > player.bank:
-                                print(f"You only have {player.bank}.")
-                                print("How much would you like to raise?")
+                        elif int(bet) < 10:
+                            print("Minimum bet is $10.")
+                            bet = input("$")
+                    bet = int(bet)
+                    print(f"You bet ${bet}.")
+            else:
+                print("What would you like to do?")
+                print("\n0 - Fold    1 - Call    2 - Raise\n")
+                choice = input("Select one: ").lower()
+                if choice in [0, '0', 'fold', 'f']:
+                    player.is_active = False
+                    bet = player.current_bet
+                    active_bets = [
+                        player[1] for player in active_players
+                        if player[0].is_active
+                    ]
+                    betting_active = len(set(active_bets)) != 1
+                    print(f"{player} folds.")
+                elif choice not in [2, '2', 'raise', 'r']:
+                    if player.current_bet != 5:
+                        bet = min([player.bank, minimum_bet])
+                        print("Current bet is not 5.")
+                        print(f"{player} bet: ${bet}")
+                    else:
+                        bet = min([player.bank, minimum_bet])
+                        print("Current bet is 5")
+                        print(f"{player} bet: ${bet}")
+                    print(f"{player} calls ${bet}.")
+                else:
+                    print("How much would you like to raise?")
+                    bet = input("$")
+                    while not bet.isdigit() or int(bet) not in range(minimum_bet, player.bank + 1):
+                        print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet * 2}.")
+                        bet = input("$")
+                    # if blinds
+                    bet = int(bet) + minimum_bet
+                    print(f"Bet after raise: ${bet}")
+                    if bet not in range(minimum_bet, player.bank + 1):
+                        if minimum_bet + bet > player.bank:
+                            print(f"You only have {player.bank}.")
+                            print("How much would you like to raise?")
+                            bet = input("$")
+                            while not bet.isdigit():
+                                print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
                                 bet = input("$")
-                                while not bet.isdigit():
-                                    print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
-                                    bet = input("$")
-                                bet = int(bet)
-                            elif minimum_bet + bet < minimum_bet:
-                                print(f"Minimum bet: ${minimum_bet}.")
+                            bet = int(bet)
+                        elif minimum_bet + bet < minimum_bet:
+                            print(f"Minimum bet: ${minimum_bet}.")
+                            bet = input("$")
+                            while not bet.isdigit():
+                                print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
                                 bet = input("$")
-                                while not bet.isdigit():
-                                    print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
-                                    bet = input("$")
-                        print(f"Bet after raise: ${bet}")
-                        minimum_bet = bet
-        print(f"{player}'s bet: ${bet} (line 311)")
+                    print(f"Bet after raise: ${bet}")
+                    minimum_bet = bet
+        if player.is_active:
+            print(f"{player}'s bet: ${bet}")
         player.current_bet = bet
         active_players = [
             (player, f"${player.current_bet}") for player in players
@@ -337,7 +358,7 @@ def place_bets(args):
         elif player.current_bet == next_player(player, players).current_bet:
             print(f"All players have called ${player.current_bet}")
             betting_active = False
-        elif not player.is_active:
+        elif not player.is_active and player.current_bet != 5:
             betting_active = False
         else:
             checks = []
@@ -346,27 +367,56 @@ def place_bets(args):
                 minimum_bet = player.current_bet
                 print(f"Minimum bet is now ${minimum_bet}.")
         input("Press Enter to continue.")
-        player = next_player(player, players)
-    for player in players:
+        try:
+            player = next_player(player, active_players_only)
+        except ValueError:
+            next_player_up = next_player(player, players)
+            while not next_player_up.is_active:
+                next_player_up = next_player(next_player_up, players)
+            player = next_player_up
+        active_players = [
+            (player, f"${player.current_bet}") for player in players
+            if player.is_active
+        ]
+        active_players_only = [
+            active_player for active_player in players
+            if active_player.is_active
+        ]
+        active_bets = [
+            active_player[1] for active_player in active_players
+            if active_player[0].is_active
+        ]
+    if len(active_players) == 1 or len(set(active_bets)) == 1:
+        betting_active = False
+        print(f"Everyone has folded. {player} wins!")
         kitty += player.current_bet
-        print(f"{player} (line 346)")
+        return [kitty, folded_players]
+    for player in players:
+        kitty += player.bet(player.current_bet)
+        print(f"{player} bets ${player.current_bet} and has ${player.bank}. (line 346)")
     print(f"Betting is complete. Kitty is ${kitty}.")
     print(f"Active players: {active_players}")
     # print(f"Players who folded: {inactive_players}")
     for player in players:
         player.current_bet = 0
-    print(f"Returning ${kitty}.")
-    input("Press Enter to continue.")
-    return kitty
+    # print(f"Returning ${kitty}.")
+    # input("Press Enter to continue.")
+    return [kitty, folded_players]
 
 
 def poker():
     """Automates a game of poker"""
     os.system('cls' if os.name == 'nt' else 'clear')
     lauren = Player("Lauren")
+    nancy = Player("Nancy")
     drew = Player("Drew")
     mom = Player("Mom")
-    players = [lauren, drew, mom]
+    john = Player("John")
+    players = [john, drew]
+    active_players = [
+        player for player in players
+        if player.is_active
+    ]
     if not players:
         num_of_players = input("How many players?\n")
         while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
@@ -388,7 +438,7 @@ def poker():
     current_player = next_player(dealer, players)
     print(f"{dealer} will deal first.\n")
     print(f"{current_player} plays first.\n")
-    for _ in range(5):
+    for _ in range(2):
         for player in players:
             player.deal(deck.deal())
     # code below can be used to pick what cards get dealt to hand
@@ -424,19 +474,74 @@ def poker():
     input("Press Enter to begin.\n")
     os.system('cls' if os.name == 'nt' else 'clear')
     blinds = True
+    board_cards = []
     betting_args = {
         "players": players,
         "current_player": current_player,
-        "blinds": blinds
+        "board_cards": board_cards,
+        "blinds": blinds,
+        "pot": pot,
+        "play": "On the table: "
     }
     print("Let's start the betting!")
     print(f"Betting will begin with {current_player}")
-    kitty = place_bets(betting_args)
+    kitty, folded_players = place_bets(betting_args)
+    for player in folded_players:
+        print(f"{player} folds.")
+        player.is_active = False
     blinds = False
     pot += kitty
+    while not current_player.is_active:
+        current_player = next_player(current_player, players)
     print(f"${kitty} has been added to the pot.")
     print(f"Pot is now ${pot}.")
-    check_winner(players)
+    for option in ["flop", "turn", "river"]:
+        betting_args = betting_args
+        betting_args["play"] = option
+        if len(active_players) == 1:
+            break
+        # betting_args["blinds"] = blinds
+        # betting_args["pot"] = pot
+        input(
+            f"\nLet's take a look at the {option}. Press Enter to continue.\n"
+        )
+        deck.deal()  # Burn a card
+        if option == "flop":
+            board_cards.extend(deck.deal(3))
+        else:
+            board_cards.extend(deck.deal())
+        print(f"{option.title()}: {board_cards}\n")
+        print(f"Betting will begin with {current_player}.")
+        input("Press Enter to continue.")
+        kitty, folded_players = place_bets(betting_args)
+        for player in folded_players:
+            print(f"{player} folds.")
+            player.is_active = False
+        pot += kitty
+        print(f"${kitty} has been added to the pot.")
+        print(f"Pot is now ${pot}.")
+    # Afer all game play, check for winner:
+    print("Now let's check for the winner!")
+    input("Press Enter to continue.")
+    active_players = [
+        player for player in players
+        if player.is_active
+    ]
+    winners = check_winners(active_players)
+    if len(winners) == 1:
+        winner, winning_hand = winners[0]
+        print(f"{winner} wins with:\n{winning_hand}")
+        print(f"{winner} wins ${pot}!")
+        winner.bank += pot
+    else:
+        print(f"Winners: {winners}")
+        for option in winners:
+            winner, winning_hand = option
+            print(f"{winner} wins with:\n{winning_hand}")
+            print(f"{winner} wins ${pot / len(winners)}!")
+            winner.bank += pot / len(winners)
+    for player in players:
+        player.is_active = True
 
 
 if __name__ == "__main__":
