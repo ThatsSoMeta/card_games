@@ -65,7 +65,7 @@ class Card:
 
 
 class Deck:
-    def __init__(self):
+    def __init__(self, count=1):
         self.values = [
             {'name': '2', 'value': 2},
             {'name': '3', 'value': 3},
@@ -85,6 +85,7 @@ class Deck:
         self.deck = [Card(suit[0], suit[1], item['name'], item['value'])
                      for suit in self.suits
                      for item in self.values
+                     for _ in range(count)
                      ]
         self.spent_cards = []
 

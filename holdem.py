@@ -17,7 +17,7 @@ hand_values = {
 }
 
 
-def check_winner(players):
+def check_winner(players, board_cards=[]):
     """Compares everyone's best hand and determines winner"""
     all_hands = {player: assess_hand(player) for player in players}
     # print(f"all_hands: {all_hands}")
@@ -35,7 +35,7 @@ def check_winner(players):
     ]
     if len(winners) == 1:
         winner = winners[0]
-        print(f"{winner[0]} wins with {winner[1]}:")
+        print(f"{winner[0]} wins with {winner[1][:5]}:")
         print(winner[2] + winner[3])
         return winner
     else:
@@ -72,7 +72,7 @@ def check_winner(players):
                     print(f"\t{card}")
         if winners[0][2][0].value > winners[1][2][0].value:
             winner = winners[0]
-            print(f"{winner[0]} wins with {winner[1]}:")
+            print(f"{winner[0]} wins with {winner[1][:5]}:")
             print(winner[2] + winner[3])
             return winner
         elif winners[0][3]:
@@ -102,12 +102,14 @@ def check_winner(players):
                         winners.pop(0)
                     if winner:
                         print(f"{winner[0]} wins with {winner[1]}:")
-                        print(winner[2] + winner[3])
+                        winning_hand = winner[2] + winner[3]
+                        print(winning_hand[:5])
                         # print(f"Winner: {winner}")
                         return winner
                 else:
                     print(f"{winner[0]} wins with {winner[1]}:")
-                    print(winner[2] + winner[3])
+                    winning_hand = winner[2] + winner[3]
+                    print(winning_hand[:5])
                     # print(f"Winner: {winner}")
                     return winner
         else:
@@ -115,20 +117,22 @@ def check_winner(players):
             print("IT'S A DRAW!")
             for winner in winners:
                 print(f"{winner[0]} wins with {winner[1]}:")
-                print(winner[2] + winner[3])
+                winning_hand = winner[2] + winner[3]
+                print(winning_hand[:5])
                 # print(f"Winner: {winner}")
             print(winners)
             return winners
 
 
-def assess_hand(player):
+def assess_hand(player, board_cards=[]):
     """Looks at player's cards and determines best poker hand"""
-    hand = sorted(player.hand, key=lambda card: card.value, reverse=True)
+    full_hand = player.hand + board_cards
+    hand = sorted(full_hand, key=lambda card: card.value, reverse=True)
     values = {}
     suits = {}
     names = {}
     possible_plays = {}
-    for card in player.hand:
+    for card in hand:
         try:
             values[card.value] += 1
         except KeyError:
@@ -192,7 +196,9 @@ def assess_hand(player):
     possible_plays["high_card"] = [hand[0]]
     possible_plays = [play for play in possible_plays.items()]
     # print(f"{player}: {possible_plays}")
-    best_hand = list(max(possible_plays, key=lambda play: hand_values[play[0]]))
+    best_hand = list(
+        max(possible_plays, key=lambda play: hand_values[play[0]])
+    )
     print(f"{player}'s best hand: {best_hand[0]}")
     for card in best_hand[1]:
         print(f"\t{card}")
@@ -361,21 +367,21 @@ def poker():
     drew = Player("Drew")
     mom = Player("Mom")
     players = [lauren, drew, mom]
-    # num_of_players = input("How many players?\n")
-    # while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
-    #     num_of_players = input("Please choose a number between 2 and 7.\n")
-    # num_of_players = int(num_of_players)
-    # for i in range(num_of_players):
-    #     player_name = input(f"Player {i + 1}, what is your name?\n")
-    #     while not player_name:
-    #         player_name = input(f"Player {i + 1}, we need to call you something...\n")
-    #     players.append(Player(player_name))
-    # print("Creating Players...")
+    if not players:
+        num_of_players = input("How many players?\n")
+        while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
+            num_of_players = input("Please choose a number between 2 and 7.\n")
+        num_of_players = int(num_of_players)
+        for i in range(num_of_players):
+            player_name = input(f"Player {i + 1}, what is your name?\n")
+            while not player_name:
+                player_name = input(f"Player {i + 1}: ")
+            players.append(Player(player_name))
+        print("Creating Players...")
     print(f"Players: {players}")
     for player in players:
         player.bank += 500
-    print("\nPlayers begin with $500.\n")
-    # print("Let's try choosing some poker hands. Let me grab a deck.\n")
+        print(f"{player} receives $500.")
     deck = Deck()
     deck.shuffle()
     dealer = random.choice(players)
@@ -414,15 +420,17 @@ def poker():
     for player in players:
         player.hand.sort(key=lambda card: card.value, reverse=True)
     pot = 0
-    print("Let's see who wins:\n")
-    input("Press Enter to begin\n")
+    print("Let's play.\n")
+    input("Press Enter to begin.\n")
     os.system('cls' if os.name == 'nt' else 'clear')
     blinds = True
     betting_args = {
         "players": players,
         "current_player": current_player,
-        "blinds": True
+        "blinds": blinds
     }
+    print("Let's start the betting!")
+    print(f"Betting will begin with {current_player}")
     kitty = place_bets(betting_args)
     blinds = False
     pot += kitty
