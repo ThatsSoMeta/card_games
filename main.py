@@ -2,6 +2,8 @@ import time
 import argparse
 import sys
 from schemas import Player, Deck
+import euchre
+import holdem
 
 
 def war():
@@ -45,6 +47,8 @@ def main(args):
                         help='Play a game of war!')
     parser.add_argument('--euchre', '-e', action='store_true',
                         help='Play a game of euchre!')
+    parser.add_argument('--poker', '-p', action='store_true',
+                        help='Play a game of poker!')
 
     if not args:
         parser.print_usage()
@@ -54,6 +58,10 @@ def main(args):
 
     if ns.war:
         war()
+    if ns.euchre:
+        euchre.euchre(euchre.automate_team_creation())
+    if ns.poker:
+        holdem.poker()
 
 
 if __name__ == "__main__":

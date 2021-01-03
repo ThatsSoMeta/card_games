@@ -1,4 +1,4 @@
-from schemas import Player, Team, Deck
+from schemas import Player, Team, Deck, next_player
 import random
 import os
 # import time
@@ -10,14 +10,6 @@ team1.add_player(Player('Mom'))
 team2.add_player(Player('Brandi'))
 team2.add_player(Player('Erin'))
 teams = [team1, team2]
-
-
-def next_player(current_player, players):
-    """Returns the next player in the game"""
-    if current_player != players[-1]:
-        return players[players.index(current_player) + 1]
-    else:
-        return players[0]
 
 
 def automate_team_creation():
@@ -35,11 +27,7 @@ def automate_team_creation():
     how_many_players = 2
     teams = []
     for i in range(int(how_many_teams)):
-        name = input(f"Team {i + 1} name:\n")
-        while not name:
-            print("Come on. We need to call you something.")
-            name = input(f"Team {i + 1} name:\n")
-        team = Team(name)
+        team = Team(f"Team {i + 1}")
         for j in range(int(how_many_players)):
             name = input(f"{team.name} - Player {j + 1} name:\n")
             while not name:
@@ -260,7 +248,7 @@ def select_trump(players, teams, dealer, current_player, deck):
         for option in possible_trump:
             if option['suit'] == choice.lower():
                 trump = possible_trump.pop(possible_trump.index(option))
-                print(f"Trump is {trump['suit']}.")
+                print(f"Trump is {trump['suit'].upper()}.")
     for card in (deck.deck + deck.spent_cards):
         if card.color == trump['color'] and card.name == 'J':
             if card.suit == trump['suit']:
@@ -324,7 +312,7 @@ def euchre_play(player, trick, dealer, teams, trump):
         print(f"\t{i} - {card}")
     print()
     if not trick:
-        print(f"Trump is {trump_suit}.")
+        print(f"Trump is {trump_suit.upper()}.")
         # print_game_info(player, teams, dealer, trump=trump, trick=[])
         print("It is your lead. Choose any card.")
         play = input(f'{player}, which card would you like to play?\n')
@@ -339,7 +327,7 @@ def euchre_play(player, trick, dealer, teams, trump):
             lead_suit = trump_suit
         else:
             lead_suit = trick[0][1].suit
-        print(f"Trump is {trump_suit}.")
+        print(f"Trump is {trump_suit.upper()}.")
         print(f"{lead_suit.title()} was led.")
         while not selected_card:
             play = input(f'{player.name}, which card would you like to play?\n')
