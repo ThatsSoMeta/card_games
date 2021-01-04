@@ -281,7 +281,7 @@ def place_bets(args):
                     choice = input("Select one: ").lower()
                 if choice in [0, '0', 'fold', 'f']:
                     player.is_active = False
-                    # bet = player.current_bet
+                    bet = player.current_bet
                     active_bets = [
                         player.current_bet for player in players
                         if player.is_active
@@ -293,9 +293,10 @@ def place_bets(args):
                     if minimum_bet == 10 and player is big_blind:
                         betting_active = False
                     if player.current_bet != 5:
-                        bet = min([player.bank, minimum_bet])
-                        # print("Current bet is not 5.")
-                        print(f"{player}'s' bet: ${bet}")
+                        if player.is_active:
+                            bet = min([player.bank, minimum_bet])
+                            # print("Current bet is not 5.")
+                            print(f"{player}'s' bet: ${bet}")
                     else:
                         bet = min([player.bank, minimum_bet])
                         print("Current bet is 5")
@@ -314,7 +315,7 @@ def place_bets(args):
                         while not bet.isdigit() or int(bet) not in range(
                             minimum_bet, player.bank + 1
                         ):
-                            print(f"Please choose an amount between")
+                            print("Please choose an amount between")
                             print(f" {minimum_bet} and {player.bank - minimum_bet * 2}.")
                             bet = input("$")
                         bet = int(bet) + int(minimum_bet)
@@ -393,10 +394,14 @@ def place_bets(args):
         # print(f"{player} bets ${player.current_bet} and has ${player.bank}. (line 346)")
         # print(f"Kitty is now ${kitty}.")
     kitty = sum([
-        player.current_bet for player in players
+        person.current_bet for person in players
     ])
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"Betting is complete. Kitty is ${kitty}.\n")
+    if minimum_bet > 0:
+        print(f"Betting is complete. All players bet ${minimum_bet}")
+        print(f"Kitty is ${kitty}.\n")
+    else:
+        print("All players check.\n")
     print("Active players:")
     for name in players:
         if name.is_active:
@@ -441,6 +446,7 @@ def poker():
                 player_name = input(f"Player {i + 1}: ")
             players.append(Player(player_name))
             print()
+        os.system('cls' if os.name == 'nt' else 'clear')
         print("Creating Players...\n")
     dealer = random.choice(players)
     print("Each player gets $500 to start the game.\n")
@@ -461,7 +467,8 @@ def poker():
         while not dealer.is_active:
             dealer = next_player(dealer, players)
         current_player = next_player(dealer, players)
-        print("Players:")
+        # print("Players:\n")
+        print("\tPlayer:\t\t\tBank:\n")
         for player in players:
             if player.is_active:
                 if player is not dealer:
@@ -515,16 +522,6 @@ def poker():
                 player for player in players
                 if player.is_active
             ]
-            betting_args = {
-                "players": active_players,
-                "current_player": current_player,
-                "board_cards": board_cards,
-                "blinds": blinds,
-                "pot": pot,
-                "play": option,
-                "big_blind": None,
-                "dealer": dealer
-            }
             if len(active_players) == 1:
                 break
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -534,7 +531,7 @@ def poker():
             for name in players:
                 if name.is_active:
                     if name is dealer:
-                        print(f"\t{name} (Dealer)\t\t${name.current_bet}")
+                        print(f"\t{name} (Dealer)\t\t${name.bank}")
                     else:
                         print(f"\t{name}\t\t\t${name.bank}")
                 else:
@@ -546,10 +543,12 @@ def poker():
                 f"\nLet's take a look at the {option}. Press Enter to continue.\n"
             )
             deck.deal()  # Burn a card
+            new_cards = []
             if option == "flop":
-                board_cards.extend(deck.deal(3))
+                new_cards = deck.deal(3)
             else:
-                board_cards.extend(deck.deal())
+                new_cards = deck.deal()
+            board_cards.extend(new_cards)
             print("On the table:")
             for card in board_cards:
                 print(f"\t{card}")
@@ -558,6 +557,16 @@ def poker():
             betting_args["current_player"] = current_player
             print(f"\nBetting will begin with {current_player}.")
             input("Press Enter to continue.")
+            betting_args = {
+                "players": active_players,
+                "current_player": current_player,
+                "board_cards": board_cards,
+                "blinds": blinds,
+                "pot": pot,
+                "play": option,
+                "big_blind": None,
+                "dealer": dealer
+            }
             kitty, folded_players = place_bets(betting_args)
             for player in folded_players:
                 print(f"{player} folds.")
@@ -581,9 +590,11 @@ def poker():
             winning_cards = winners[0][2]
             other_cards = winners[0][3]
             # print(f"Pot: ${pot}")
-            print(f"{winner} wins with {winning_hand_name}:")
+            print(f"{winner} wins with {winning_hand_name}:\n")
             winning_hand = winning_cards + other_cards
-            print(winning_hand[:5])
+            # print(winning_hand[:5])
+            for card in winning_hand[:5]:
+                print(f"\t{card}")
             print(f"\n{winner} wins ${pot}!")
             winner.bank += pot
             print(f"{winner} now has ${winner.bank}")
@@ -599,9 +610,11 @@ def poker():
                 winning_cards,
                 other_cards = option
                 print(f"Pot: ${pot}")
-                print(f"{winner} wins with {winning_hand_name}:")
+                print(f"{winner} wins with {winning_hand_name}:\n")
                 winning_hand = winning_cards + other_cards
-                print(winning_hand[:5])
+                # print(winning_hand[:5])
+                for card in winning_hand[:5]:
+                    print(f"\t{card}")
                 print(f"\n{winner} wins ${win}")
         for player in players:
             player.hand = []
@@ -624,8 +637,9 @@ def poker():
             else:
                 print("Next round:")
     print("Final banks:")
+    print("\n\tPlayer:\t\tBank:\n")
     for player in players:
-        print(f"\t{player}: ${player.bank}")
+        print(f"\t{player}\t\t${player.bank}")
     input("\nThank you for playing! Press Enter to exit.\n")
     return
 
