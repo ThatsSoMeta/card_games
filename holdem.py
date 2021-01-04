@@ -169,6 +169,7 @@ def place_bets(args):
     blinds = args["blinds"]
     pot = args["pot"]
     board_cards = args["board_cards"]
+    dealer = args["dealer"]
     # play = args["play"]
     big_blind = args['big_blind']
     # small_blind = args['small_blind']
@@ -203,10 +204,19 @@ def place_bets(args):
             print(f"Bank: ${player.bank - player.current_bet}")
             print(f"Current Bet: ${player.current_bet}")
             print(f"Minimum Bet: ${minimum_bet}\n")
-            print(f"Checked players: {checks}")
+            # print(f"Checked players: {checks}")
             print("\tPlayer:\t\tCurrent Bet:")
-            for name in active_players:
-                print(f"\t{name}\t\t${name.current_bet}")
+            for name in players:
+                if name.is_active:
+                    if name is dealer:
+                        print(f"\t{name} (Dealer)\t${name.current_bet}")
+                    else:
+                        print(f"\t{name}\t\t${name.current_bet}")
+                else:
+                    if name is dealer:
+                        print(f"\t{name} (Dealer)\tFolded")
+                    else:
+                        print(f"\t{name}\t\tFolded")
             print(f"\nPot: ${pot}\nKitty: ${kitty}")
             print("\nOn the table:")
             for card in board_cards:
@@ -334,9 +344,9 @@ def place_bets(args):
             player for player in players
             if player.is_active
         ]
-        print("New current bets:")
-        for person in players:
-            print(f"{person}: ${person.current_bet}")
+        # print("New current bets:")
+        # for person in players:
+        #     print(f"{person}: ${person.current_bet}")
         if player.current_bet == 0:
             if player.is_active:
                 # checks.append(player)
@@ -348,7 +358,7 @@ def place_bets(args):
         #     betting_active = False
         else:
             checks = []
-            print(f"You now have ${player.bank} - {player.current_bet}")
+            print(f"You now have ${player.bank - player.current_bet}")
             if player.current_bet > minimum_bet:
                 minimum_bet = player.current_bet
                 print(f"Minimum bet is now ${minimum_bet}.")
@@ -385,6 +395,7 @@ def place_bets(args):
     kitty = sum([
         player.current_bet for player in players
     ])
+    os.system('cls' if os.name == 'nt' else 'clear')
     print(f"Betting is complete. Kitty is ${kitty}.")
     print(f"Active players: {active_players}")
     # print(f"Players who folded: {inactive_players}")
@@ -399,11 +410,11 @@ def poker():
     """Automates a game of poker"""
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to the poker table. Please have a seat!\n")
-    lauren = Player("Lauren")
+    # lauren = Player("Lauren")
     # nancy = Player("Nancy")
-    drew = Player("Drew")
+    # drew = Player("Drew")
     # mom = Player("Mom")
-    brandi = Player("Brandi")
+    # brandi = Player("Brandi")
     # john = Player("John")
     # players = [lauren, drew, brandi]
     players = []
@@ -412,6 +423,7 @@ def poker():
         while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
             num_of_players = input("Please choose a number between 2 and 7.\n")
         num_of_players = int(num_of_players)
+        print()
         for i in range(num_of_players):
             player_name = input(f"Player {i + 1}, what is your name?\n")
             while not player_name:
@@ -419,140 +431,169 @@ def poker():
             players.append(Player(player_name))
             print()
         print("Creating Players...\n")
+    dealer = random.choice(players)
+    print("Each player gets $500 to start the game.\n")
     # active_players = [
     #     player for player in players
     #     if player.is_active
     # ]
-    print("Each player gets $500 to start the game.\n")
     print("Players:")
     for player in players:
         player.bank += 500
         print(f"\t{player}")
-    deck = Deck()
-    deck.shuffle()
-    dealer = random.choice(players)
-    current_player = next_player(dealer, players)
-    while not current_player.is_active:
-        current_player = next_player(current_player, players)
-    print(f"\n{dealer} will deal first.\n")
-    print(f"{current_player} plays first.\n")
-    for _ in range(2):
+    # Start new round
+    game_active = True
+    # TODO: Implement "While game is active, do this:"
+    while game_active:
+        deck = Deck()
+        deck.shuffle()
+        dealer = next_player(dealer, players)
+        current_player = next_player(dealer, players)
+        while not current_player.is_active:
+            current_player = next_player(current_player, players)
+        print(f"\nDealer: {dealer}\n")
+        print(f"{current_player} plays first.\n")
+        for _ in range(2):
+            for player in players:
+                player.deal(deck.deal())
         for player in players:
-            player.deal(deck.deal())
-    for player in players:
-        player.hand.sort(key=lambda card: card.value, reverse=True)
-    pot = 0
-    print("Let's play.\n")
-    input("Press Enter to begin.\n")
-    os.system('cls' if os.name == 'nt' else 'clear')
-    blinds = True
-    small_blind = next_player(dealer, players)
-    big_blind = next_player(small_blind, players)
-    board_cards = []
-    betting_args = {
-        "players": players,
-        "current_player": current_player,
-        "board_cards": board_cards,
-        "blinds": blinds,
-        "pot": pot,
-        "big_blind": big_blind,
-        # "small_blind": small_blind,
-        "play": "On the table: "
-    }
-    print("Let's start the betting!")
-    print(f"Betting will begin with {current_player}")
-    kitty, folded_players = place_bets(betting_args)
-    for player in folded_players:
-        print(f"{player} folds.")
-        player.is_active = False
-    blinds = False
-    pot += kitty
-    current_player = next_player(current_player, players)
-    while not current_player.is_active:
-        current_player = next_player(current_player, players)
-    print(f"${kitty} has been added to the pot.")
-    print(f"Pot is now ${pot}.")
-    big_blind = None
-    small_blind = None
-    for option in ["flop", "turn", "river"]:
-        active_players_only = [
-            player for player in players
-            if player.is_active
-        ]
+            player.hand.sort(key=lambda card: card.value, reverse=True)
+        pot = 0
+        print("Let's play.\n")
+        input("Press Enter to begin.\n")
+        os.system('cls' if os.name == 'nt' else 'clear')
+        blinds = True
+        small_blind = next_player(dealer, players)
+        big_blind = next_player(small_blind, players)
+        board_cards = []
         betting_args = {
-            "players": active_players_only,
+            "players": players,
             "current_player": current_player,
             "board_cards": board_cards,
             "blinds": blinds,
             "pot": pot,
-            "play": option,
-            "big_blind": None
+            "big_blind": big_blind,
+            "dealer": dealer,
+            "play": "On the table: "
         }
-        if len(active_players_only) == 1:
-            break
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(f"Betting is done\n\nPot: ${pot}\n")
-        input(
-            f"Let's take a look at the {option}. Press Enter to continue.\n"
-        )
-        deck.deal()  # Burn a card
-        if option == "flop":
-            board_cards.extend(deck.deal(3))
-        else:
-            board_cards.extend(deck.deal())
-        print("On the table:")
-        for card in board_cards:
-            print(f"\t{card}")
-        while not current_player.is_active:
-            current_player = next_player(current_player, players)
-        print(f"\nBetting will begin with {current_player}.")
-        input("Press Enter to continue.")
+        print("Let's start the betting!")
+        print(f"Betting will begin with {current_player}")
         kitty, folded_players = place_bets(betting_args)
         for player in folded_players:
             print(f"{player} folds.")
             player.is_active = False
+        blinds = False
         pot += kitty
+        current_player = next_player(current_player, players)
+        while not current_player.is_active:
+            current_player = next_player(current_player, players)
         print(f"${kitty} has been added to the pot.")
         print(f"Pot is now ${pot}.")
-    # Afer all game play, check for winner:
-    print("Now let's check for the winner!")
-    input("Press Enter to continue.")
-    for player in players:
-        player.hand.extend(board_cards)
-    winners = check_winners([
-        player for player in players
-        if player.is_active
-    ])
-    if len(winners) == 1:
-        # print(f"winners: {winners}")
-        winner = winners[0][0]
-        winning_hand_name = winners[0][1]
-        winning_cards = winners[0][2]
-        other_cards = winners[0][3]
-        print(f"Pot: ${pot}")
-        print(f"{winner} wins with {winning_hand_name}:")
-        winning_hand = winning_cards + other_cards
-        print(winning_hand[:5])
-        print(f"\n{winner} wins ${pot}!")
-        winner.bank += pot
-        print(f"{winner} now has ${winner.bank}")
-    else:
-        print(f"Winners: {winners}")
-        # remainder = pot % len(winners)
-        win = pot // len(winners)
-        for option in winners:
-            winner,
-            winning_hand_name,
-            winning_cards,
-            other_cards = option
+        # big_blind = None
+        # small_blind = None
+        for option in ["flop", "turn", "river"]:
+            active_players = [
+                player for player in players
+                if player.is_active
+            ]
+            betting_args = {
+                "players": active_players,
+                "current_player": current_player,
+                "board_cards": board_cards,
+                "blinds": blinds,
+                "pot": pot,
+                "play": option,
+                "big_blind": None,
+                "dealer": dealer
+            }
+            if len(active_players) == 1:
+                break
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f"Betting is done\n\nPot: ${pot}\n")
+            input(
+                f"Let's take a look at the {option}. Press Enter to continue.\n"
+            )
+            deck.deal()  # Burn a card
+            if option == "flop":
+                board_cards.extend(deck.deal(3))
+            else:
+                board_cards.extend(deck.deal())
+            print("On the table:")
+            for card in board_cards:
+                print(f"\t{card}")
+            while not current_player.is_active:
+                current_player = next_player(current_player, players)
+            print(f"\nBetting will begin with {current_player}.")
+            input("Press Enter to continue.")
+            kitty, folded_players = place_bets(betting_args)
+            for player in folded_players:
+                print(f"{player} folds.")
+                player.is_active = False
+            pot += kitty
+            print(f"${kitty} has been added to the pot.")
+            print(f"Pot is now ${pot}.")
+        # Afer all game play, check for winner:
+        print("Now let's check for the winner!")
+        input("Press Enter to continue.")
+        for player in players:
+            player.hand.extend(board_cards)
+        winners = check_winners([
+            player for player in players
+            if player.is_active
+        ])
+        if len(winners) == 1:
+            # print(f"winners: {winners}")
+            winner = winners[0][0]
+            winning_hand_name = winners[0][1]
+            winning_cards = winners[0][2]
+            other_cards = winners[0][3]
             print(f"Pot: ${pot}")
             print(f"{winner} wins with {winning_hand_name}:")
             winning_hand = winning_cards + other_cards
             print(winning_hand[:5])
-            print(f"\n{winner} wins ${win}")
+            print(f"\n{winner} wins ${pot}!")
+            winner.bank += pot
+            print(f"{winner} now has ${winner.bank}")
+        else:
+            print(f"Winners: {winners}")
+            remainder = pot % len(winners)
+            pot = remainder
+            print("We have multiple winners:\n")
+            win = pot // len(winners)
+            for option in winners:
+                winner,
+                winning_hand_name,
+                winning_cards,
+                other_cards = option
+                print(f"Pot: ${pot}")
+                print(f"{winner} wins with {winning_hand_name}:")
+                winning_hand = winning_cards + other_cards
+                print(winning_hand[:5])
+                print(f"\n{winner} wins ${win}")
+        for player in players:
+            player.hand = []
+            if player.bank:
+                player.is_active = True
+        active_players = [
+            player for player in players
+            if player.is_active
+        ]
+        if len(active_players) < 2:
+            print("Not enough players.")
+            print(f"Only {active_players[0]} remains.")
+            input("Press Enter to continue.")
+            game_active = False
+        else:
+            print("Would you like to continue?")
+            keep_playing = input("Y or N?\n").lower()
+            if keep_playing in ['n', 'no']:
+                game_active = False
+            else:
+                print("Next round:")
+    print("Final banks:")
     for player in players:
-        if player.bank:
-            player.is_active = True
+        print(f"\t{player}: ${player.bank}")
+    print("Thank you for playing!")
 
 
 if __name__ == "__main__":
