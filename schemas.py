@@ -121,3 +121,12 @@ def next_player(current_player, players):
     if current_player != players[-1]:
         return players[players.index(current_player) + 1]
     return players[0]
+
+
+def previous_player(current_player, players):
+    """Returns the previous player in the game"""
+    if len(players) == 1:
+        return players[0]
+    if current_player != players[0]:
+        return players[players.index(current_player) - 1]
+    return players[-1]
