@@ -1,4 +1,4 @@
-from schemas import Deck, Player, next_player, previous_player
+from schemas import Deck, Player, next_player
 import random
 import os
 
@@ -19,15 +19,19 @@ hand_values = {
 
 def check_winners(players, board_cards=[]):
     """Compares everyone's best hand and determines winner"""
-    all_hands = {player: assess_hand(player) for player in players}
+    all_hands = {
+        player: assess_hand(player, board_cards)
+        for player in players
+    }
+    print(f"all_hands in check_winners: {all_hands}")
     best_hand_value = max(
-        [hand_values[player[0]] for player in all_hands.values()]
+        [hand_values[option[0]] for option in all_hands.values()]
     )
     for hand, value in hand_values.items():
         if value == best_hand_value:
             best_hand = hand
     winners = [
-        [player, hand[0], hand[1], player.hand]
+        [player, hand[0], (hand[1] + hand[2])[:5], player.hand, board_cards]
         for player, hand in all_hands.items()
         if hand[0] == best_hand
     ]
@@ -84,8 +88,11 @@ def check_winners(players, board_cards=[]):
 
 def assess_hand(player, board_cards=[]):
     """Looks at player's cards and determines best poker hand"""
+    # print(f"{player}'s hand: {player.hand}")
+    # print(f"Board Cards: {board_cards}")
     full_hand = player.hand + board_cards
     hand = sorted(full_hand, key=lambda card: card.value, reverse=True)
+    # print(f"Combined hand: {hand}")
     values = {}
     suits = {}
     names = {}
@@ -104,7 +111,7 @@ def assess_hand(player, board_cards=[]):
         except KeyError:
             names[card.name] = 1
     vals = sorted([val for val in values.keys()])
-    for count in suits.values():
+    for suit, count in suits.items():
         if count == 5:
             if vals == list(range(min(vals), max(vals) + 1)):
                 if max(vals) == 14:
@@ -118,6 +125,7 @@ def assess_hand(player, board_cards=[]):
             else:
                 possible_plays["flush"] = [
                     card for card in hand
+                    if card.suit is suit
                 ]
     for value, count in values.items():
         if count == 4:
@@ -156,10 +164,30 @@ def assess_hand(player, board_cards=[]):
     best_hand = list(
         max(possible_plays, key=lambda play: hand_values[play[0]])
     )
-    for card in best_hand[1]:
-        player.discard(card)
-    print()
-    player.hand.sort(key=lambda card: card.value, reverse=True)
+    best_hand_name = best_hand[0]
+    best_hand_cards = best_hand[1]
+    # print(player)
+    # print(f"player hand: {player.hand}")
+    # print(f"best_hand: {best_hand}")
+    # print(f"best_hand_name: {best_hand_name}")
+    # print(f"best_hand_cards: {best_hand_cards}")
+    # print(f"hand: {hand}")
+    # print(f"full_hand: {full_hand}")
+    non_winning_cards = sorted([
+        card for card in full_hand
+        if card not in best_hand_cards
+    ], key=lambda card: card.value, reverse=True)
+    # print(f"non_winning_cards: {non_winning_cards}")
+    # for card in best_hand[1]:
+    #     print(f"{player} discards {card}")
+    #     if card in player.hand:
+    #         player.discard(card)
+    # print(f"{player}'s best hand: {best_hand}")
+    # for card in hand:
+    #     print(f"\t{card}")
+    # print()
+    # player.hand.sort(key=lambda card: card.value, reverse=True)
+    best_hand.append(non_winning_cards)
     return best_hand
 
 
@@ -256,6 +284,8 @@ def place_bets(args):
                     print("How much would you like to bet?")
                     bet = input("$")
                     while not bet.isdigit() or int(bet) not in range(player.bank + 1):
+                        while not bet.isdigit():
+                            bet = input("$")
                         if bet in [0, '0']:
                             checks.append(player)
                             bet = minimum_bet
@@ -398,8 +428,7 @@ def place_bets(args):
     ])
     os.system('cls' if os.name == 'nt' else 'clear')
     if minimum_bet > 0:
-        print(f"Betting is complete. All players bet ${minimum_bet}")
-        print(f"Kitty is ${kitty}.\n")
+        print(f"Betting is complete. ${kitty} will be added to the pot.\n")
     else:
         print("All players check.\n")
     print("Active players:")
@@ -514,7 +543,7 @@ def poker():
         # while not current_player.is_active:
         #     current_player = next_player(current_player, players)
         print(f"${kitty} has been added to the pot.")
-        print(f"Pot is now ${pot}.")
+        print(f"Pot is now ${pot}.\n")
         # big_blind = None
         # small_blind = None
         for option in ["flop", "turn", "river"]:
@@ -554,7 +583,7 @@ def poker():
                 print(f"\t{card}")
             while not current_player.is_active:
                 current_player = next_player(current_player, players)
-            betting_args["current_player"] = current_player
+            # betting_args["current_player"] = current_player
             print(f"\nBetting will begin with {current_player}.")
             input("Press Enter to continue.")
             betting_args = {
@@ -573,16 +602,28 @@ def poker():
                 player.is_active = False
             pot += kitty
             print(f"${kitty} has been added to the pot.")
-            print(f"Pot is now ${pot}.")
+            print(f"Pot is now ${pot}.\n")
         # Afer all game play, check for winner:
-        print("Now let's check for the winner!")
-        input("Press Enter to continue.")
-        for player in players:
-            player.hand.extend(board_cards)
+        print("Board Cards:")
+        for card in board_cards:
+            print(f"\t{card}")
+        print()
+        if len(active_players) == 1:
+            print(f"{active_players[0]} wins!")
+        else:
+            print("Now let's check for the winner!")
+            input("Press Enter to continue.")
+        # for player in players:
+        #     if player.is_active:
+        #         print(f"{player}'s hand:")
+        #         for card in player.hand:
+        #             print(card)
+            # player.hand.extend(board_cards)
         winners = check_winners([
             player for player in players
             if player.is_active
-        ])
+        ], board_cards)
+        print(f"Winners: {winners}")
         if len(winners) == 1:
             # print(f"winners: {winners}")
             winner = winners[0][0]
@@ -590,11 +631,13 @@ def poker():
             winning_cards = winners[0][2]
             other_cards = winners[0][3]
             # print(f"Pot: ${pot}")
-            print(f"{winner} wins with {winning_hand_name}:\n")
-            winning_hand = winning_cards + other_cards
-            # print(winning_hand[:5])
-            for card in winning_hand[:5]:
-                print(f"\t{card}")
+            if len(active_players) > 1:
+                print(f"{winner} wins with {winning_hand_name}:\n")
+                winning_hand = winning_cards + other_cards
+                # print(winning_hand[:5])
+                print("Winning hand:")
+                for card in winning_hand[:5]:
+                    print(f"\t{card}")
             print(f"\n{winner} wins ${pot}!")
             winner.bank += pot
             print(f"{winner} now has ${winner.bank}")
@@ -641,6 +684,7 @@ def poker():
     for player in players:
         print(f"\t{player}\t\t${player.bank}")
     input("\nThank you for playing! Press Enter to exit.\n")
+    # os.system('cls' if os.name == 'nt' else 'clear')
     return
 
 
