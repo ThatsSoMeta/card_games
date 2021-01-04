@@ -1,72 +1,13 @@
-import random
 import time
 import argparse
 import sys
-
-
-class Player:
-    def __init__(self, name):
-        self.name = name
-        self.hand = []
-
-    def __repr__(self):
-        return self.name
-
-
-class Card:
-    def __init__(self, suit, name, value):
-        self.suit = suit
-        self.name = name
-        self.value = value
-
-    def __repr__(self):
-        return str(f'{self.name} {self.suit}')
-
-
-class Deck:
-    def __init__(self):
-        self.values = [
-            {'name': '2', 'value': 2},
-            {'name': '3', 'value': 3},
-            {'name': '4', 'value': 4},
-            {'name': '5', 'value': 5},
-            {'name': '6', 'value': 6},
-            {'name': '7', 'value': 7},
-            {'name': '8', 'value': 8},
-            {'name': '9', 'value': 9},
-            {'name': '10', 'value': 10},
-            {'name': 'J', 'value': 11},
-            {'name': 'Q', 'value': 12},
-            {'name': 'K', 'value': 13},
-            {'name': 'A', 'value': 14},
-            ]
-        self.suits = ['hearts', 'diamonds', 'spades', 'clubs']
-        self.deck = [Card(suit, item['name'], item['value'])
-                     for suit in self.suits
-                     for item in self.values
-                     ]
-        self.spent_cards = []
-
-    def __repr__(self):
-        return self.deck
-
-    def deal(self):
-        if not self.deck:
-            raise IndexError("Deck is empty.")
-        dealt_card = self.deck.pop()
-        self.spent_cards.append(dealt_card)
-        return dealt_card
-
-    def shuffle(self):
-        self.deck.extend(self.spent_cards)
-        random.shuffle(self.deck)
-
-    def print(self):
-        print("Remaining: ", self.deck)
-        print("Spent: ", self.spent_cards)
+from schemas import Player, Deck
+import euchre
+import holdem
 
 
 def war():
+    """Automates a simple game of War"""
     players = []
     num_of_players = int(input('How many players? '))
     for i in range(1, num_of_players + 1):
@@ -104,6 +45,10 @@ def main(args):
     )
     parser.add_argument('--war', '-w', action='store_true',
                         help='Play a game of war!')
+    parser.add_argument('--euchre', '-e', action='store_true',
+                        help='Play a game of euchre!')
+    parser.add_argument('--poker', '-p', action='store_true',
+                        help='Play a game of poker!')
 
     if not args:
         parser.print_usage()
@@ -113,6 +58,10 @@ def main(args):
 
     if ns.war:
         war()
+    if ns.euchre:
+        euchre.euchre(euchre.automate_team_creation())
+    if ns.poker:
+        holdem.poker()
 
 
 if __name__ == "__main__":
