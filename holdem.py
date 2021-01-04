@@ -203,6 +203,7 @@ def place_bets(args):
             print(f"Bank: ${player.bank - player.current_bet}")
             print(f"Current Bet: ${player.current_bet}")
             print(f"Minimum Bet: ${minimum_bet}\n")
+            print(f"Checked players: {checks}")
             print("\tPlayer:\t\tCurrent Bet:")
             for name in active_players:
                 print(f"\t{name}\t\t${name.current_bet}")
@@ -229,7 +230,7 @@ def place_bets(args):
                 bet = 10
             elif minimum_bet == 0:
                 count += 1
-                checks.append(player)
+                # checks.append(player)
                 print("Would you like to check or bet?")
                 print("\n1 - Check    2 - Bet\n")
                 choice = input("Select one: ").lower()
@@ -238,6 +239,7 @@ def place_bets(args):
                 ]:
                     choice = input("Select one: ")
                 if choice in [1, '1', 'check', 'c']:
+                    checks.append(player)
                     bet = 0
                 else:
                     checks = [player]
@@ -245,7 +247,7 @@ def place_bets(args):
                     bet = input("$")
                     while not bet.isdigit() or int(bet) not in range(player.bank + 1):
                         if bet in [0, '0']:
-                            # checks.append(player)
+                            checks.append(player)
                             bet = minimum_bet
                             print(f"{player} checks.")
                         elif int(bet) > player.bank + 1:
@@ -278,6 +280,8 @@ def place_bets(args):
                     print(f"{player} folds.")
                 elif choice in [1, '1', 'call', 'c']:
                     checks.append(player)
+                    if minimum_bet == 10 and player is big_blind:
+                        betting_active = False
                     if player.current_bet != 5:
                         bet = min([player.bank, minimum_bet])
                         # print("Current bet is not 5.")
@@ -288,7 +292,7 @@ def place_bets(args):
                         print(f"{player}'s' bet: ${bet}")
                     print(f"{player} calls ${bet}.")
                 elif choice in [2, '2', 'raise', 'r']:
-                    checks = [player]
+                    # checks = [player]
                     print("How much would you like to raise?")
                     bet = input("$")
                     if bet in [0, '0']:
@@ -296,30 +300,31 @@ def place_bets(args):
                         bet = 0
                         print(f"{player} checks.")
                     else:
+                        checks = [player]
                         while not bet.isdigit() or int(bet) not in range(
                             minimum_bet, player.bank + 1
                         ):
                             print(f"Please choose an amount between")
                             print(f" {minimum_bet} and {player.bank - minimum_bet * 2}.")
                             bet = input("$")
-                    bet = int(bet) + int(minimum_bet)
-                    print(f"Bet after raise: ${bet}")
-                    if int(bet) not in range(minimum_bet, player.bank + 1):
-                        if minimum_bet + bet > player.bank:
-                            print(f"You only have {player.bank}.")
-                            print("How much would you like to raise?")
-                            bet = input("$")
-                            while not bet.isdigit():
-                                print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
+                        bet = int(bet) + int(minimum_bet)
+                        print(f"Bet after raise: ${bet}")
+                        if int(bet) not in range(minimum_bet, player.bank + 1):
+                            if minimum_bet + bet > player.bank:
+                                print(f"You only have {player.bank}.")
+                                print("How much would you like to raise?")
                                 bet = input("$")
-                            # bet = int(bet)
-                        elif minimum_bet + bet < minimum_bet:
-                            print(f"Minimum bet: ${minimum_bet}.")
-                            bet = input("$")
-                            while not bet.isdigit():
-                                print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
+                                while not bet.isdigit():
+                                    print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
+                                    bet = input("$")
+                                # bet = int(bet)
+                            elif minimum_bet + bet < minimum_bet:
+                                print(f"Minimum bet: ${minimum_bet}.")
                                 bet = input("$")
-                        bet = int(bet)
+                                while not bet.isdigit():
+                                    print(f"Please choose an amount between {minimum_bet} and {player.bank - minimum_bet}.")
+                                    bet = input("$")
+                            bet = int(bet)
                     print(f"Bet after raise: ${bet}")
                     minimum_bet = bet
         if player.is_active:
@@ -334,7 +339,7 @@ def place_bets(args):
             print(f"{person}: ${person.current_bet}")
         if player.current_bet == 0:
             if player.is_active:
-                checks.append(player)
+                # checks.append(player)
                 print(f"{player} checks.")
             if len(checks) == len(active_players):
                 print("All players have checked.")
@@ -385,6 +390,7 @@ def place_bets(args):
     # print(f"Players who folded: {inactive_players}")
     input("Press Enter to continue.")
     for player in players:
+        player.bank -= player.current_bet
         player.current_bet = 0
     return [kitty, folded_players]
 
