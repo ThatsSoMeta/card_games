@@ -23,7 +23,7 @@ def check_winners(players, board_cards=[]):
         player: assess_hand(player, board_cards)
         for player in players
     }
-    print(f"all_hands in check_winners: {all_hands}")
+    # print(f"all_hands in check_winners: {all_hands}")
     best_hand_value = max(
         [hand_values[option[0]] for option in all_hands.values()]
     )
