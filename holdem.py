@@ -28,23 +28,54 @@ def check_winners(players, board_cards=[]):
         for player in players
         if player.is_active
     ]
-    print(f"all_hands in check_winners: {all_hands}")
+    print("all_hands in check_winners:")
+    for option in all_hands:
+        print(f"\t{option['player']}: {option['best_hand_name']}")
+        print(f"\t\t{option['best_hand_cards']}")
+        print(f"\t\tOther cards: {option['non_winning_cards']}")
     best_hand_value = max(
         [option["hand_value"] for option in all_hands]
     )
-    print(f"best_hand_value: {best_hand_value}")
+    for option, value in hand_values.items():
+        if value == best_hand_value:
+            print(f"Best hand type: {option}")
+            # best_hand_type = option
     winners = [
         option for option in all_hands
         if option["hand_value"] == best_hand_value
     ]
+    # Winner schema
+    # {
+    #     "player": player,
+    #     "best_hand_name": best_hand_name,
+    #     "hand_value": hand_values[best_hand_name],
+    #     "best_hand_cards": best_hand_cards,
+    #     "non_winning_cards": non_winning_cards
+    # }
+    winners.sort(
+        key=lambda winner: winner["best_hand_cards"][0].value,
+        reverse=True
+    )
+    print("Current winners after checking for max hand:")
+    for option in winners:
+        print(f"\t{option['player']}: {option['best_hand_name']}")
+        print(f"\t\tWinning cards: {option['best_hand_cards']}")
+        print(f"\t\tNon winning cards: {option['non_winning_cards']}")
     if len(winners) == 1:
         return winners
     else:
-        winners.sort(
-            key=lambda winner: winner["best_hand_cards"][0].value,
-            reverse=True
-        )
-        if winners[0]["non_winning_cards"]:
+        while winners[0]['best_hand_cards'][0].value > winners[-1]['best_hand_cards'][0].value:
+            print(f"{winners[-1]['player']} did not win and will be removed.")
+            winners.pop(-1)
+            if len(winners) == 1:
+                return winners
+        while winners[0]['best_hand_cards'][-1].value > winners[-1]['best_hand_cards'][-1].value:
+            winners.pop(-1)
+            if len(winners) == 1:
+                return winners
+        if len(winners[0]['best_hand_cards']) == 5:
+            return winners
+        else:
             values_list = [
                 tuple(
                     card.value
@@ -52,44 +83,55 @@ def check_winners(players, board_cards=[]):
                 )
                 for winner in winners
             ]
-        else:
-            values_list = [
-                tuple(
-                    card.value
-                    for card in winner["best_hand_cards"]
-                )
-                for winner in winners
-            ]
+        # else:
+        #     values_list = [
+        #         tuple(
+        #             card.value
+        #             for card in winner["best_hand_cards"]
+        #         )
+        #         for winner in winners
+        #     ]
         values_set = {tuple(vals) for vals in values_list}
-        print(f"Winners: {winners}")
+        print("Winners:")
+        for option in winners:
+            print(f"\t{option['player']}: {option['best_hand_name']}")
+            print(f"\t\t{option['best_hand_cards']}")
+            print(f"\t\t{option['non_winning_cards']}")
         print(f"values_list: {values_list}")
         print(f"values_set: {values_set}")
-    #     if len(values_set) < len(values_list):
-    #         for winner in winners:
-    #             player = winner[0]
-    #             player.hand = winner[2] + winner[3]
-    #     if winners[0][2][0].value > winners[1][2][0].value:
-    #         return winners[:1]
-    #     elif winners[0][3]:
-    #         winners.sort(key=lambda winner: winner[3][0].value)
-    #         winner = None
-    #         for i in range(len(winners[0][3])):
-    #             if len(winners) == 1:
-    #                 winner = winners
-    #             if not winner:
-    #                 first_player_card = winners[0][3][i]
-    #                 second_player_card = winners[1][3][i]
-    #                 if first_player_card.value > second_player_card.value:
-    #                     winners.pop(1)
-    #                 elif first_player_card.value < second_player_card.value:
-    #                     winners.pop(0)
-    #                 if winner:
-    #                     return winners
-    #             else:
-    #                 return winners
-    #     else:
-    #         return winners
-    # return winners
+        if len(values_set) < len(values_list):
+            for winner in winners:
+                player = winner["player"]
+                player.hand = (
+                    winner["best_hand_cards"] +
+                    winner["non_winning_cards"]
+                )
+            while winners[0]["best_hand_cards"][0].value > winners[1]["best_hand_cards"][0].value:
+                winners.pop(1)
+                if len(winners) == 1:
+                    return winners
+        elif winners[0]["non_winning_cards"]:
+            winners.sort(
+                key=lambda winner: winner["non_winning_cards"][0].value
+            )
+            winner = None
+            for i in range(len(winners[0]["non_winning_cards"])):
+                if len(winners) == 1:
+                    winner = winners
+                if not winner:
+                    first_player_card = winners[0]["non_winning_cards"][i]
+                    second_player_card = winners[1]["non_winning_cards"][i]
+                    if first_player_card.value > second_player_card.value:
+                        winners.pop(1)
+                    elif first_player_card.value < second_player_card.value:
+                        winners.pop(0)
+                    if winner:
+                        return winners
+                else:
+                    return winners
+        else:
+            return winners
+    return winners
 
 
 def assess_hand(player, board_cards=[]):
@@ -106,8 +148,12 @@ def assess_hand(player, board_cards=[]):
     for card in hand:
         try:
             values[card.value] += 1
+            if card.value == 14:
+                values[1] += 1
         except KeyError:
             values[card.value] = 1
+            if card.value == 14:
+                values[1] = 1
         try:
             suits[card.suit] += 1
         except KeyError:
@@ -116,23 +162,53 @@ def assess_hand(player, board_cards=[]):
             names[card.name] += 1
         except KeyError:
             names[card.name] = 1
-    vals = sorted([val for val in values.keys()])
-    for suit, count in suits.items():
-        if count > 4:
-            if vals == list(range(min(vals), max(vals) + 1)):
-                if max(vals) == 14:
-                    possible_plays["royal_flush"] = [
-                        card for card in hand
-                    ]
-                else:
-                    possible_plays["straight_flush"] = [
-                        card for card in hand
-                    ]
-            else:
-                possible_plays["flush"] = [
-                    card for card in hand
-                    if card.suit is suit
-                ]
+    vals = list(set(
+        sorted([val for val in values.keys()])
+    ))
+    for suit, value in suits.items():
+        if value > 4:
+            print(f"{player} has a flush in {suit}")
+            flush_cards = sorted(
+                [card for card in hand if card.suit == suit],
+                key=lambda card: card.value
+            )
+            flush_values = [
+                card.value for card in flush_cards
+            ]
+            if 14 in flush_values:
+                print("There is an ace in the flush.")
+                flush_values.append(1)
+                flush_values.sort()
+                print(f"Updated values: {flush_values}")
+            best_flush = flush_cards[-5:]
+            best_flush.sort(
+                key=lambda card: card.value,
+                reverse=True
+            )
+            print(f"Best flush: {best_flush}")
+            # TODO: Add flush to possible_plays
+            possible_plays["flush"] = best_flush
+            for i in range(len(flush_values) - 4):
+                flush_frag = list(flush_values[i: i + 5])
+                str_flush_test = list(range(flush_values[i], flush_values[i] + 5))
+                if flush_frag == str_flush_test:
+                    print("Straight flush!")
+                    straight_flush = []  # flush_cards[-5:]
+                    for value in flush_frag:
+                        for card in flush_cards:
+                            if value == 1 and card.value == 14:
+                                straight_flush.append(card)
+                            if card.value == value:
+                                straight_flush.append(card)
+                    # straight_flush_values = flush_frag
+                    print(straight_flush)
+                    # TODO: Add straight flush to possile_plays
+                    possible_plays["straight_flush"] = straight_flush
+                    if straight_flush[-1].value == 14:
+                        print("Royal flush!!!")
+                        royal_flush = straight_flush
+                        # TODO: Add royal_flush to possible_plays
+                        possible_plays["royal_flush"] = royal_flush
     for value, count in values.items():
         if count == 4:
             possible_plays["four_of_a_kind"] = [
@@ -143,44 +219,63 @@ def assess_hand(player, board_cards=[]):
                 card for card in hand if card.value == value
             ]
         elif count == 2:
+            new_pair = [
+                card for card in hand if card.value == value
+            ]
             try:
-                new_pair = [
-                    card for card in hand if card.value == value
-                ]
-                if possible_plays['pair'][0].value > new_pair[0].value:
-                    possible_plays["pair"].extend(new_pair)
-                else:
-                    possible_plays["pair"] = new_pair.extend(
-                        possible_plays["pair"]
-                    )
+                if possible_plays['pair']:
+                    print(f"Current pair: {possible_plays['pair']}")
+                    print(f"New pair: {new_pair}")
+                    if possible_plays['pair'][0].value > new_pair[0].value:
+                        possible_plays["pair"].extend(new_pair)
+                    else:
+                        possible_plays["pair"] = new_pair.extend(
+                            possible_plays["pair"]
+                        )
             except KeyError:
-                possible_plays["pair"] = [
-                    card for card in hand if card.value == value
-                ]
-            if len(possible_plays["pair"]) == 4:
-                possible_plays["two_pair"] = possible_plays["pair"]
+                possible_plays["pair"] = new_pair
+            if len(possible_plays["pair"]) > 2:
+                possible_plays["two_pair"] = possible_plays["pair"][:4]
+    possible_straights = []
     if len(vals) > 4:
-        possible_straights = []
+        # print(f"More than 4 values: {vals}")
         for i in range(len(vals) - 4):
-            print(i)
-            current_frag = vals[i: i + 5]
+            current_frag = list(vals[i: i + 5])
             test_list = list(range(vals[i], vals[i] + 5))
-            print(f"Current frag: {current_frag}")
-            print(f"Test list: {test_list}")
-            if vals[i: i + 5] == list(range(vals[i], vals[i] + 5)):
-                possible_straights.append(vals[i: i + 5])
-                print(possible_straights)
-            if possible_straights:
-                best_straight = possible_straights[-1]
-                best_straight_cards = [
-                    card for card in hand
-                    if card.value in best_straight
-                ]
-                possible_plays["straight"] = best_straight_cards
-
-        # for _ in range(5, len(vals) + 1)
-        # if vals == list(range(min(vals), max(vals) + 1)):
-        #     possible_plays["straight"] = [card for card in hand]
+            # print(f"Current frag: {current_frag}")
+            # print(f"Test list: {test_list}")
+            if current_frag == test_list:
+                possible_straights.append(current_frag)
+    if possible_straights:
+        # if sorted(flush_values) in possible_straights:
+        #     print(f"Possible straight flush: {flush_values}")
+        best_straight_values = possible_straights.pop()
+        # print(f"Straight values: {best_straight_values}")
+        best_straight = []
+        values = []
+        for card in hand:
+            # print("Checking straight values")
+            if 1 in best_straight_values:
+                if card.value == 14:
+                    # print(f"{card} value: 1")
+                    # print(f"Current values list: {values}")
+                    if 1 not in values:
+                        # print(f"{card} value of 1 not in values.")
+                        values.append(1)
+                        best_straight.append(card)
+            if card.value in best_straight_values:
+                # print(f"{card} value: {card.value}")
+                # print(f"Current values list: {values}")
+                if card.value not in values:
+                    # print(f"{card} value not in values.")
+                    values.append(card.value)
+                    best_straight.append(card)
+        if 1 in best_straight_values:
+            # print("There is an Ace")
+            ace = best_straight.pop(0)
+            best_straight.append(ace)
+        print(f"{player}'s best straight: {best_straight}")
+        possible_plays["straight"] = best_straight
     if "pair" in possible_plays and "three_of_a_kind" in possible_plays:
         possible_plays["full_house"] = (
             possible_plays["three_of_a_kind"] + possible_plays["pair"]
@@ -290,7 +385,7 @@ def place_bets(args):
                     choice = input("Select one: ")
                 if choice in [1, '1', 'check', 'c']:
                     checks.append(player)
-                    print(f"{player} should be in checks: {checks}")
+                    # print(f"{player} should be in checks: {checks}")
                     bet = 0
                 else:
                     print("How much would you like to bet?")
@@ -676,13 +771,12 @@ def poker():
             other_cards = winners[0]["non_winning_cards"]
             other_cards.sort(key=lambda card: card.value, reverse=True)
             # print(f"Pot: ${pot}")
-            if len(active_players) > 1:
-                print(f"{winner} wins with {winning_hand_name}:\n")
-                winning_hand = winning_cards + other_cards
-                # print(winning_hand[:5])
-                # print("Winning hand:")
-                for card in winning_hand[:5]:
-                    print(f"\t{card}")
+            print(f"{winner} wins with {winning_hand_name}:\n")
+            winning_hand = winning_cards + other_cards
+            # print(winning_hand[:5])
+            # print("Winning hand:")
+            for card in winning_hand[:5]:
+                print(f"\t{card}")
             print(f"\n{winner} wins ${pot}!")
             winner.bank += pot
             print(f"{winner} now has ${winner.bank}")
@@ -693,10 +787,10 @@ def poker():
             print("We have multiple winners:\n")
             win = pot // len(winners)
             for option in winners:
-                winner = option[0]
-                winning_hand_name = option[1]
-                winning_cards = option[2]
-                other_cards = option[3]
+                winner = option['player']
+                winning_hand_name = option['best_hand_name']
+                winning_cards = option['best_hand_cards']
+                other_cards = option['non_winning_cards']
                 print(f"Pot: ${pot}")
                 print(f"{winner} wins with {winning_hand_name}:\n")
                 winning_hand = winning_cards + other_cards
@@ -704,6 +798,7 @@ def poker():
                 for card in winning_hand[:5]:
                     print(f"\t{card}")
                 print(f"\n{winner} wins ${win}")
+                print(f"${leftover_pot} will be added to the pot for the next round.")
                 pot = leftover_pot
         for player in players:
             player.hand = []
