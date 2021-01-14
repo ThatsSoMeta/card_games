@@ -31,82 +31,40 @@ def check_winners(players, board_cards=[]):
         option for option in all_hands
         if option["best_hand_value"] == best_hand_value
     ]
-    # Winner schema
-    # {
-    #     "player": player,
-    #     "best_hand_name": best_hand_name,
-    #     "best_hand_value": hand_values[best_hand_name],
-    #     "best_hand_cards": best_hand_cards,
-    #     "non_winning_cards": non_winning_cards
-    # }
-    # Sort winners by highest card in winning hand descending
+    if len(winners) == 1:
+        return winners
     winners.sort(
         key=lambda winner: winner["best_hand_cards"][0].value,
         reverse=True
     )
-    print("Current winners after checking for max hand:")
-    for option in winners:
-        option['full_hand'] = option['best_hand_cards'] + option['non_winning_cards']
-        option['full_hand'] = option['full_hand'][:5]
-        print(f"\t{option['player']}: {option['best_hand_name']}")
-        print(f"\t\t{option['best_hand_name']}: {option['full_hand']}")
-        # print(f"\t\tNon winning cards: {option['non_winning_cards']}\n")
-    if len(winners) == 1:
-        return winners
-    # Compare winning hand values
+    # print("Current winners after checking for max hand:")
     # for option in winners:
-    #     print(f"{option['player']}: {option['best_hand_cards']}")
     #     option['full_hand'] = option['best_hand_cards'] + option['non_winning_cards']
     #     option['full_hand'] = option['full_hand'][:5]
-    print("Comparing hands:")
+    #     print(f"\t{option['player']}: {option['best_hand_name']}")
+    #     print(f"\t\t{option['best_hand_name']}: {option['full_hand']}")
+    # print("Comparing hands:")
     for i in range(5):
         winners.sort(key=lambda winner: winner['full_hand'][i].value)
         while winners[0]['full_hand'][i].value != winners[-1]['full_hand'][i].value:
             if winners[0]['full_hand'][i].value > winners[-1]['full_hand'][i].value:
-                print(f"{winners[-1]['player']} did not win and will be removed.")
-                print(f"({winners[0]['player']}'s {winners[0]['full_hand'][i]} beats {winners[-1]['player']}'s {winners[-1]['full_hand'][i]})")
+                # print(f"{winners[-1]['player']} did not win and will be removed.")
+                # print(f"({winners[0]['player']}'s {winners[0]['full_hand'][i]} beats {winners[-1]['player']}'s {winners[-1]['full_hand'][i]})")
                 winners.pop(-1)
             else:
-                print(f"{winners[0]['player']} did not win and will be removed.")
-                print(f"({winners[-1]['player']}'s {winners[-1]['full_hand'][i]} beats {winners[0]['player']}'s {winners[0]['full_hand'][i]})")
+                # print(f"{winners[0]['player']} did not win and will be removed.")
+                # print(f"({winners[-1]['player']}'s {winners[-1]['full_hand'][i]} beats {winners[0]['player']}'s {winners[0]['full_hand'][i]})")
                 winners.pop(0)
         if len(winners) == 1:
             return winners
-    # while winners[0]['best_hand_cards'][-1].value > winners[-1]['best_hand_cards'][-1].value:
-    #     print(f"{winners[-1]['player']} did not win and will be removed.")
-    #     print(f"({winners[0]['player']}'s {winners[0]['best_hand_cards'][-1]} beats their {winners[-1]['best_hand_cards'][-1]})")
-    #     winners.pop(-1)
-    #     if len(winners) == 1:
-    #         return winners
-    print("Winners after comparing winning hands:")
-    for option in winners:
-        print(f"\t{option['player']}: {option['best_hand_cards']}")
-    print("Winners if winning hands are equal:")
-    for option in winners:
-        print(f"\t{option['player']}: {option['best_hand_name']}")
-        print(f"\t\t{option['best_hand_cards']}")
-        print(f"\t\t{option['non_winning_cards']}")
-    # if len(winners[0]['best_hand_cards']) == 5:
-    #     return winners
-    # for i in range(5 - len(winners[0]['non_winning_cards'])):
-    #     max_value = max([
-    #         winner['non_winning_cards'][i].value
-    #         for winner in winners
-    #     ])
-    #     for winner in winners:
-    #         if winner['non_winning_cards'].value < max_value:
-    #             winners.pop(winners.index(winner))
-        # while winners[0]['non_winning_cards'][i].value != winners[-1]['non_winning_cards'][i].value:
-        #     if winners[0]['non_winning_cards'][i].value > winners[-1]['non_winning_cards'][i].value:
-        #         print(f"{winners[-1]['player']} did not win and will be removed.")
-        #         print(f"({winners[0]['player']}'s {winners[0]['non_winning_cards'][i]} beats their {winners[-1]['non_winning_cards'][i]})")
-        #         winners.pop(-1)
-        #     else:
-        #         print(f"{winners[0]['player']} did not win and will be removed.")
-        #         print(f"({winners[-1]['player']}'s {winners[-1]['non_winning_cards'][i]} beats their {winners[0]['non_winning_cards'][i]})")
-        #         winners.pop(0)
-            # if len(winners) == 1:
-            #     return winners
+    # print("Winners after comparing winning hands:")
+    # for option in winners:
+    #     print(f"\t{option['player']}: {option['best_hand_cards']}")
+    # print("Winners if winning hands are equal:")
+    # for option in winners:
+    #     print(f"\t{option['player']}: {option['best_hand_name']}")
+    #     print(f"\t\t{option['best_hand_cards']}")
+    #     print(f"\t\t{option['non_winning_cards']}")
     return winners
 
 
@@ -592,12 +550,12 @@ def poker():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to the poker table. Please have a seat!\n")
     players = []
-    drew = Player("Drew")
-    mom = Player("Mom")
-    erin = Player("Erin")
-    brandi = Player("Brandi")
-    john = Player("John")
-    players = [drew, mom, erin, brandi, john]
+    # drew = Player("Drew")
+    # mom = Player("Mom")
+    # erin = Player("Erin")
+    # brandi = Player("Brandi")
+    # john = Player("John")
+    # players = [drew, mom, erin, brandi, john]
     if not players:
         num_of_players = input("How many players?\n")
         while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
