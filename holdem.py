@@ -19,27 +19,14 @@ hand_values = {
 
 def check_winners(players, board_cards=[]):
     """Compares everyone's best hand and determines winner"""
-    # all_hands = {
-    #     player: assess_hand(player, board_cards)
-    #     for player in players
-    # }
     all_hands = [
         assess_hand(player, board_cards)
         for player in players
         if player.is_active
     ]
-    # print("all_hands in check_winners:")
-    # for option in all_hands:
-    #     print(f"\t{option['player']}: {option['best_hand_name']}")
-    #     print(f"\t\t{option['best_hand_cards']}")
-    #     print(f"\t\tOther cards: {option['non_winning_cards']}")
     best_hand_value = max(
         [option["best_hand_value"] for option in all_hands]
     )
-    # for option, value in hand_values.items():
-    #     if value == best_hand_value:
-    #         print(f"Best hand type: {option}")
-    #         best_hand_type = option
     winners = [
         option for option in all_hands
         if option["best_hand_value"] == best_hand_value
@@ -52,7 +39,6 @@ def check_winners(players, board_cards=[]):
     #     "best_hand_cards": best_hand_cards,
     #     "non_winning_cards": non_winning_cards
     # }
-    #
     # Sort winners by highest card in winning hand descending
     winners.sort(
         key=lambda winner: winner["best_hand_cards"][0].value,
@@ -83,9 +69,6 @@ def check_winners(players, board_cards=[]):
     print("Winners after comparing winning hands:")
     for option in winners:
         print(f"\t{option['player']}: {option['best_hand_cards']}")
-    # if len(winners[0]['best_hand_cards']) == 5:
-    #     print("All players have the same winning hand.")
-    #     return winners
     print("Winners if winning hands are equal:")
     for option in winners:
         print(f"\t{option['player']}: {option['best_hand_name']}")
@@ -93,14 +76,13 @@ def check_winners(players, board_cards=[]):
         print(f"\t\t{option['non_winning_cards']}")
     if len(winners[0]['best_hand_cards']) == 5:
         return winners
-    values_list = [
-        tuple(
-            card.value
-            for card in winner["non_winning_cards"]
-        )
-        for winner in winners
-    ]
-    # values_set = {tuple(vals) for vals in values_list}
+    # values_list = [
+    #     tuple(
+    #         card.value
+    #         for card in winner["non_winning_cards"]
+    #     )
+    #     for winner in winners
+    # ]
     # Compare non-winning hand values
     while winners[0]['non_winning_cards'][0].value > winners[-1]['non_winning_cards'][0].value:
         print(f"{winners[-1]['player']} did not win and will be removed.")
@@ -110,50 +92,11 @@ def check_winners(players, board_cards=[]):
             return winners
     return winners
 
-    #     print(f"values_list: {values_list}")
-    #     print(f"values_set: {values_set}")
-    #     if len(values_set) < len(values_list):
-    #         for winner in winners:
-    #             player = winner["player"]
-    #             player.hand = (
-    #                 winner["best_hand_cards"] +
-    #                 winner["non_winning_cards"]
-    #             )
-    #         while winners[0]["best_hand_cards"][0].value > winners[1]["best_hand_cards"][0].value:
-    #             winners.pop(1)
-    #             if len(winners) == 1:
-    #                 return winners
-    #     elif winners[0]["non_winning_cards"]:
-    #         winners.sort(
-    #             key=lambda winner: winner["non_winning_cards"][0].value
-    #         )
-    #         winner = None
-    #         for i in range(len(winners[0]["non_winning_cards"])):
-    #             if len(winners) == 1:
-    #                 winner = winners
-    #             if not winner:
-    #                 first_player_card = winners[0]["non_winning_cards"][i]
-    #                 second_player_card = winners[1]["non_winning_cards"][i]
-    #                 if first_player_card.value > second_player_card.value:
-    #                     winners.pop(1)
-    #                 elif first_player_card.value < second_player_card.value:
-    #                     winners.pop(0)
-    #                 if winner:
-    #                     return winners
-    #             else:
-    #                 return winners
-    #     else:
-    #         return winners
-    # return winners
-
 
 def assess_hand(player, board_cards=[]):
     """Looks at player's cards and determines best poker hand"""
-    # print(f"{player}'s hand: {player.hand}")
-    # print(f"Board Cards: {board_cards}")
     full_hand = player.hand + board_cards
     hand = sorted(full_hand, key=lambda card: card.value, reverse=True)
-    # print(f"Combined hand: {hand}")
     values = {}
     suits = {}
     names = {}
@@ -192,7 +135,6 @@ def assess_hand(player, board_cards=[]):
                 print("There is an ace in the flush.")
                 flush_values.append(1)
                 flush_values.sort()
-                # print(f"Updated values: {flush_values}")
             best_flush = flush_cards[-5:]
             best_flush.sort(
                 key=lambda card: card.value,
@@ -233,14 +175,8 @@ def assess_hand(player, board_cards=[]):
             new_pair = [
                 card for card in hand if card.value == value
             ]
-            # print(f"{player} looking at another pair. Value: {value}")
-            # print(f"In hand: {player.hand}")
-            # print(f"On the table: {board_cards}")
-            # print(f"New pair: {new_pair}")
             try:
                 if possible_plays['pair']:
-                    # print(f"{player}'s current pair: {possible_plays['pair']}")
-                    # print(f"New pair: {new_pair}")
                     if possible_plays['pair'][0].value > new_pair[0].value:
                         possible_plays["pair"].extend(new_pair)
                     else:
@@ -253,10 +189,6 @@ def assess_hand(player, board_cards=[]):
                 possible_plays["pair"] = new_pair
             except IndexError:
                 raise IndexError(message="Index Error in pairs")
-                # print(f"Current player: {player}")
-                # print(f"Current value: {value}")
-                # print(f"Possible pair already? {possible_plays['pair']}")
-                # print(f"New pair: {new_pair}")
             if len(possible_plays["pair"]) > 2:
                 possible_plays["two_pair"] = possible_plays["pair"][:4]
     possible_straights = []
@@ -493,9 +425,9 @@ def place_bets(args):
                         print(f"{player}'s' bet: ${bet}")
                     if bet == minimum_bet:
                         print(f"{player} calls ${bet}.")
-                    # else:
-                    #     print(f"{player} is all in with ${bet}.")
-                    #     player.all_in = True
+                    else:
+                        print(f"{player} is all in with ${bet}.")
+                        player.all_in = True
                 elif choice in [2, '2', 'raise', 'r']:
                     print("How much would you like to raise?")
                     bet = input("$")
@@ -631,14 +563,13 @@ def poker():
     """Automates a game of poker"""
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to the poker table. Please have a seat!\n")
-    lauren = Player("Lauren")
-    # nancy = Player("Nancy")
-    drew = Player("Drew")
-    mom = Player("Mom")
-    brandi = Player("Brandi")
-    john = Player("John")
-    players = [drew, mom, john, brandi, lauren]
-    # players = []
+    # drew = Player("Drew")
+    # mom = Player("Mom")
+    # erin = Player("Erin")
+    # brandi = Player("Brandi")
+    # john = Player("John")
+    # players = [drew, mom, erin, brandi, john]
+    players = []
     if not players:
         num_of_players = input("How many players?\n")
         while not num_of_players.isdigit() or int(num_of_players) < 2 or int(num_of_players) > 7:
@@ -655,13 +586,8 @@ def poker():
         print("Creating Players...\n")
     dealer = random.choice(players)
     print("Each player gets $500 to start the game.\n")
-    # active_players = [
-    #     player for player in players
-    #     if player.is_active
-    # ]
     for player in players:
         player.bank += 500
-        # print(f"\t{player}")
     # Start new round
     game_active = True
     while game_active:
@@ -671,7 +597,6 @@ def poker():
         while not dealer.is_active:
             dealer = next_player(dealer, players)
         current_player = next_player(dealer, players)
-        # print("Players:\n")
         print("\tPlayer:\t\t\tBank:\n")
         for player in players:
             if player.is_active:
@@ -682,7 +607,6 @@ def poker():
         while not current_player.is_active:
             current_player = next_player(current_player, players)
         print(f"\nDealer: {dealer}\n")
-        # print(f"{current_player} plays first.\n")
         for _ in range(2):
             for player in players:
                 player.deal(deck.deal())
@@ -706,22 +630,12 @@ def poker():
             "play": "On the table: "
         }
         print(f"Betting will begin with {next_player(big_blind, players)}.\n")
-        # print("Let's start the betting!")
-        # print(f"Betting will begin with {current_player}")
         input("Press Enter to begin.\n")
         kitty = place_bets(betting_args)
-        # for player in folded_players:
-        #     print(f"{player} folds.")
-        #     player.is_active = False
         blinds = False
         pot += kitty
-        # current_player = next_player(current_player, players)
-        # while not current_player.is_active:
-        #     current_player = next_player(current_player, players)
         print(f"${kitty} has been added to the pot.")
         print(f"Pot is now ${pot}.\n")
-        # big_blind = None
-        # small_blind = None
         for option in ["flop", "turn", "river"]:
             active_players = [
                 player for player in players
@@ -786,29 +700,18 @@ def poker():
         else:
             print("Now let's check for the winner!")
             input("Press Enter to continue.\n")
-        # for player in players:
-        #     if player.is_active:
-        #         print(f"{player}'s hand:")
-        #         for card in player.hand:
-        #             print(card)
-            # player.hand.extend(board_cards)
         winners = check_winners([
             player for player in players
             if player.is_active
         ], board_cards)
-        # print(f"Winners: {winners}")
         if len(winners) == 1:
-            # print(f"winners: {winners}")
             winner = winners[0]["player"]
             winning_hand_name = winners[0]["best_hand_name"]
             winning_cards = winners[0]["best_hand_cards"]
             other_cards = winners[0]["non_winning_cards"]
             other_cards.sort(key=lambda card: card.value, reverse=True)
-            # print(f"Pot: ${pot}")
             print(f"{winner} wins with {winning_hand_name}:\n")
             winning_hand = winning_cards + other_cards
-            # print(winning_hand[:5])
-            # print("Winning hand:")
             for card in winning_hand[:5]:
                 print(f"\t{card}")
             print(f"\n{winner} wins ${pot}!")
@@ -828,7 +731,6 @@ def poker():
                 print(f"Pot: ${pot}")
                 print(f"{winner} wins with {winning_hand_name}:\n")
                 winning_hand = winning_cards + other_cards
-                # print(winning_hand[:5])
                 for card in winning_hand[:5]:
                     print(f"\t{card}")
                 print(f"\n{winner} wins ${win}")
