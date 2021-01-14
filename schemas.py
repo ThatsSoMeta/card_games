@@ -27,6 +27,8 @@ class Player:
         self.is_active = True
         self.bank = 0
         self.current_bet = 0
+        self.all_in = False
+        self.max_pot = 0
 
     def __repr__(self):
         return self.name
